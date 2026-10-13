@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sellora.AuditService.Application\Sellora.AuditService.Application.csproj" />
+    <ProjectReference Include="..\Sellora.AuditService.Infrastructure\Sellora.AuditService.Infrastructure.csproj" />
+    <ProjectReference Include="..\Sellora.AuditService.Domain\Sellora.AuditService.Domain.csproj" />
+  </ItemGroup>
+
+</Project>

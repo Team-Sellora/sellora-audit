@@ -1,0 +1,57 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{168ABDF9-1A5A-4A98-A1EC-70D7B39CA337}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellora.AuditService.Domain", "src\Sellora.AuditService.Domain\Sellora.AuditService.Domain.csproj", "{30B45A27-DBCF-4249-B4E8-506ED650D1A8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellora.AuditService.Application", "src\Sellora.AuditService.Application\Sellora.AuditService.Application.csproj", "{169836D8-9D9E-4393-9548-D3E64ABC955A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellora.AuditService.Infrastructure", "src\Sellora.AuditService.Infrastructure\Sellora.AuditService.Infrastructure.csproj", "{B42A6296-D295-46DD-B030-01C7522C85EA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellora.AuditService.Api", "src\Sellora.AuditService.Api\Sellora.AuditService.Api.csproj", "{D566CFA2-3BA7-44C2-92E3-8320FD896884}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{22AA92F1-4AC8-4B48-89D6-E4C9F0AAC19B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sellora.AuditService.Tests", "tests\Sellora.AuditService.Tests\Sellora.AuditService.Tests.csproj", "{843A85F3-B695-463D-A68C-077A4422B6EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{30B45A27-DBCF-4249-B4E8-506ED650D1A8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30B45A27-DBCF-4249-B4E8-506ED650D1A8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30B45A27-DBCF-4249-B4E8-506ED650D1A8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30B45A27-DBCF-4249-B4E8-506ED650D1A8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{169836D8-9D9E-4393-9548-D3E64ABC955A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{169836D8-9D9E-4393-9548-D3E64ABC955A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{169836D8-9D9E-4393-9548-D3E64ABC955A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{169836D8-9D9E-4393-9548-D3E64ABC955A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B42A6296-D295-46DD-B030-01C7522C85EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B42A6296-D295-46DD-B030-01C7522C85EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B42A6296-D295-46DD-B030-01C7522C85EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B42A6296-D295-46DD-B030-01C7522C85EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D566CFA2-3BA7-44C2-92E3-8320FD896884}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D566CFA2-3BA7-44C2-92E3-8320FD896884}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D566CFA2-3BA7-44C2-92E3-8320FD896884}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D566CFA2-3BA7-44C2-92E3-8320FD896884}.Release|Any CPU.Build.0 = Release|Any CPU
+		{843A85F3-B695-463D-A68C-077A4422B6EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{843A85F3-B695-463D-A68C-077A4422B6EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{843A85F3-B695-463D-A68C-077A4422B6EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{843A85F3-B695-463D-A68C-077A4422B6EA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{30B45A27-DBCF-4249-B4E8-506ED650D1A8} = {168ABDF9-1A5A-4A98-A1EC-70D7B39CA337}
+		{169836D8-9D9E-4393-9548-D3E64ABC955A} = {168ABDF9-1A5A-4A98-A1EC-70D7B39CA337}
+		{B42A6296-D295-46DD-B030-01C7522C85EA} = {168ABDF9-1A5A-4A98-A1EC-70D7B39CA337}
+		{D566CFA2-3BA7-44C2-92E3-8320FD896884} = {168ABDF9-1A5A-4A98-A1EC-70D7B39CA337}
+		{843A85F3-B695-463D-A68C-077A4422B6EA} = {22AA92F1-4AC8-4B48-89D6-E4C9F0AAC19B}
+	EndGlobalSection
+EndGlobal
