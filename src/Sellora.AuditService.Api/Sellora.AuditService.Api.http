@@ -1,0 +1,18 @@
+@host = http://localhost:5208
+@token = paste-a-WSO2-access-token-here
+
+### Search the audit log by order reference (timeline, oldest first)
+GET {{host}}/api/audit?orderReference=ORD-260924-K7P2QM
+Authorization: Bearer {{token}}
+
+### Newest entries of one event type in a date range
+GET {{host}}/api/audit?eventType=PaymentRecorded&from=2026-09-01T00:00:00Z&to=2026-09-30T23:59:59Z&page=1&pageSize=20
+Authorization: Bearer {{token}}
+
+### One entry with its hashes and payload
+GET {{host}}/api/audit/00000000-0000-0000-0000-000000000000
+Authorization: Bearer {{token}}
+
+### Verify the company's hash chain (Company Admin)
+GET {{host}}/api/audit/verify
+Authorization: Bearer {{token}}

@@ -1,0 +1,44 @@
+{
+  "producer": "sellora-organization",
+  "source": "HierarchyEventFactory.SalesRepAssigned, KafkaEventPublisher (dev)",
+  "topic": "sellora.hierarchy.v1",
+  "partition": 0,
+  "offset": 42,
+  "timestamp": "2026-09-15T04:00:01.000+00:00",
+  "key": "43000000-0000-0000-0000-000000000001",
+  "headers": [
+    {
+      "key": "event-id",
+      "base64": "AAAAUQAAAAAAAAAAAAAAAg=="
+    },
+    {
+      "key": "event-type",
+      "text": "SalesRepAssigned"
+    },
+    {
+      "key": "schema-version",
+      "text": "1.0"
+    },
+    {
+      "key": "company-id",
+      "text": "30000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "correlation-id",
+      "text": "a1b2c3d4-0000-0000-0000-000000000001"
+    }
+  ],
+  "value": "{\"eventId\":\"52000000-0000-0000-0000-000000000002\",\"eventType\":\"SalesRepAssigned\",\"schemaVersion\":\"1.0\",\"companyId\":\"30000000-0000-0000-0000-000000000001\",\"entityId\":\"43000000-0000-0000-0000-000000000001\",\"salesRepId\":\"43000000-0000-0000-0000-000000000001\",\"salesRepName\":\"Nimal Perera\",\"territoryId\":\"42000000-0000-0000-0000-000000000001\",\"agencyId\":\"41000000-0000-0000-0000-000000000001\",\"effectiveAt\":\"2026-09-15T04:00:00+00:00\",\"correlationId\":\"a1b2c3d4-0000-0000-0000-000000000001\"}",
+  "expected": {
+    "eventId": "51000000-0000-0000-0000-000000000002",
+    "eventType": "SalesRepAssigned",
+    "aggregateType": "SalesRep",
+    "aggregateId": "43000000-0000-0000-0000-000000000001",
+    "orderReference": null,
+    "provinceId": null,
+    "actorUserId": "unknown",
+    "actorRole": null,
+    "correlationId": "a1b2c3d4-0000-0000-0000-000000000001",
+    "occurredAt": "2026-09-15T04:00:00.000000Z"
+  }
+}

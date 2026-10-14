@@ -3,8 +3,7 @@
 --   audit_owner  owns the schemas and tables; used only to run migrations.
 --   audit_app    the runtime role. SELECT and INSERT on the audit schema,
 --                nothing else, so the audit log cannot be altered with the
---                service's own credentials. Full DML on the reporting schema,
---                whose projections and export jobs are updated as they run.
+--                service's own credentials.
 --
 -- Run as an administrator of audit_db, before and again after migrations.
 -- It is idempotent and holds no secrets:
@@ -40,29 +39,20 @@ SELECT format('REVOKE CREATE ON DATABASE %I FROM PUBLIC', current_database()) \g
 REVOKE CREATE ON SCHEMA public FROM PUBLIC;
 
 CREATE SCHEMA IF NOT EXISTS audit AUTHORIZATION audit_owner;
-CREATE SCHEMA IF NOT EXISTS reporting AUTHORIZATION audit_owner;
 CREATE SCHEMA IF NOT EXISTS migrations AUTHORIZATION audit_owner;
 ALTER SCHEMA audit OWNER TO audit_owner;
-ALTER SCHEMA reporting OWNER TO audit_owner;
 ALTER SCHEMA migrations OWNER TO audit_owner;
 
-REVOKE ALL ON SCHEMA audit, reporting, migrations FROM PUBLIC;
-GRANT USAGE ON SCHEMA audit, reporting TO audit_app;
+REVOKE ALL ON SCHEMA audit, migrations FROM PUBLIC;
+GRANT USAGE ON SCHEMA audit TO audit_app;
 
 -- Tables created later by migrations (run as audit_owner) get the same grants.
 ALTER DEFAULT PRIVILEGES FOR ROLE audit_owner IN SCHEMA audit
     GRANT SELECT, INSERT ON TABLES TO audit_app;
 ALTER DEFAULT PRIVILEGES FOR ROLE audit_owner IN SCHEMA audit
     GRANT USAGE, SELECT ON SEQUENCES TO audit_app;
-ALTER DEFAULT PRIVILEGES FOR ROLE audit_owner IN SCHEMA reporting
-    GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO audit_app;
-ALTER DEFAULT PRIVILEGES FOR ROLE audit_owner IN SCHEMA reporting
-    GRANT USAGE, SELECT, UPDATE ON SEQUENCES TO audit_app;
 
 -- Tables that already exist (when the script is re-run after migrations).
 GRANT SELECT, INSERT ON ALL TABLES IN SCHEMA audit TO audit_app;
 REVOKE UPDATE, DELETE, TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA audit FROM audit_app;
 GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA audit TO audit_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA reporting TO audit_app;
-REVOKE TRUNCATE, REFERENCES, TRIGGER ON ALL TABLES IN SCHEMA reporting FROM audit_app;
-GRANT USAGE, SELECT, UPDATE ON ALL SEQUENCES IN SCHEMA reporting TO audit_app;

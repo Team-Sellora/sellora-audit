@@ -1,8 +1,8 @@
 using System.Reflection;
 using ApiMarker = Program;
-using ApplicationMarker = Sellora.AuditService.Application.AssemblyMarker;
-using DomainMarker = Sellora.AuditService.Domain.AssemblyMarker;
-using InfrastructureMarker = Sellora.AuditService.Infrastructure.AssemblyMarker;
+using ApplicationMarker = Sellora.AuditService.Application.Ingestion.AuditEnvelopeNormaliser;
+using DomainMarker = Sellora.AuditService.Domain.Audit.AuditEntry;
+using InfrastructureMarker = Sellora.AuditService.Infrastructure.Persistence.AuditDbContext;
 
 namespace Sellora.AuditService.Tests;
 
@@ -25,6 +25,20 @@ public class ArchitectureTests
         var references = ServiceReferences(typeof(ApplicationMarker).Assembly);
 
         Assert.All(references, name => Assert.Equal(Domain, name));
+    }
+
+    [Fact]
+    public void Domain_and_application_do_not_depend_on_ef_core_kafka_or_aspnet()
+    {
+        var forbidden = new[] { "Microsoft.EntityFrameworkCore", "Confluent.Kafka", "Microsoft.AspNetCore", "Npgsql" };
+
+        var offenders = new[] { typeof(DomainMarker).Assembly, typeof(ApplicationMarker).Assembly }
+            .SelectMany(assembly => assembly.GetReferencedAssemblies())
+            .Select(reference => reference.Name!)
+            .Where(name => forbidden.Any(prefix => name.StartsWith(prefix, StringComparison.Ordinal)))
+            .ToList();
+
+        Assert.Empty(offenders);
     }
 
     [Fact]

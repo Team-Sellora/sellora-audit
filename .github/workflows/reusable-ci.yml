@@ -1,0 +1,120 @@
+name: Reusable .NET CI
+
+on:
+  workflow_call:
+    inputs:
+      solution-path:
+        required: true
+        type: string
+      sonar-project-key:
+        required: true
+        type: string
+      sonar-organization:
+        required: true
+        type: string
+    secrets:
+      SONAR_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  build-test-analyze:
+    name: build-test-analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.403
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: zulu
+          java-version: "17"
+
+      - name: Install SonarScanner
+        run: dotnet tool install dotnet-sonarscanner --tool-path "${{ runner.temp }}/scanner"
+
+      - name: Start SonarCloud analysis
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          "${{ runner.temp }}/scanner/dotnet-sonarscanner" begin \
+            /k:"${{ inputs.sonar-project-key }}" \
+            /o:"${{ inputs.sonar-organization }}" \
+            /d:sonar.token="$SONAR_TOKEN" \
+            /d:sonar.cs.opencover.reportsPaths="**/coverage.opencover.xml" \
+            /d:sonar.coverage.exclusions="**/Program.cs"
+
+      - name: Restore
+        run: dotnet restore "${{ inputs.solution-path }}"
+
+      - name: Build
+        run: dotnet build "${{ inputs.solution-path }}" --configuration Release --no-restore
+
+      - name: Test with OpenCover coverage
+        run: |
+          dotnet test "${{ inputs.solution-path }}" \
+            --configuration Release \
+            --no-build \
+            --collect:"XPlat Code Coverage;Format=opencover" \
+            --results-directory ./TestResults \
+            --logger "trx;LogFileName=test-results.trx"
+
+      - name: Finish SonarCloud analysis
+        if: always()
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          "${{ runner.temp }}/scanner/dotnet-sonarscanner" end /d:sonar.token="$SONAR_TOKEN"
+
+      - name: Upload test results and coverage
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: audit-test-results
+          path: TestResults/
+          if-no-files-found: warn
+
+  docker-health:
+    name: docker-health
+    needs: build-test-analyze
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build --build-arg BUILD_COMMIT_SHA="${{ github.sha }}" -t sellora-audit:ci .
+
+      - name: Start image and verify health endpoint
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker run --detach --name sellora-audit-ci --publish 8080:8080 sellora-audit:ci
+          trap 'docker logs sellora-audit-ci || true; docker rm -f sellora-audit-ci || true' EXIT
+
+          for attempt in {1..15}; do
+            status=$(curl --silent --output /dev/null --write-out "%{http_code}" http://localhost:8080/health || true)
+            if [ "$status" = "200" ]; then
+              echo "Audit image is healthy."
+              exit 0
+            fi
+            echo "Attempt $attempt: /health returned ${status:-no response}; retrying..."
+            sleep 2
+          done
+
+          echo "Audit image did not become healthy."
+          exit 1

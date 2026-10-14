@@ -11,4 +11,19 @@
     <ProjectReference Include="..\Sellora.AuditService.Domain\Sellora.AuditService.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Confluent.Kafka" Version="2.6.0" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.10" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Http.Resilience" Version="8.10.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Sellora.AuditService.Tests" />
+  </ItemGroup>
+
 </Project>

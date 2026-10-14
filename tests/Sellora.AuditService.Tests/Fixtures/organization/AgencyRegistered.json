@@ -1,0 +1,44 @@
+{
+  "producer": "sellora-organization",
+  "source": "HierarchyEventFactory.AgencyRegistered, KafkaEventPublisher (dev)",
+  "topic": "sellora.hierarchy.v1",
+  "partition": 0,
+  "offset": 41,
+  "timestamp": "2026-09-14T10:15:31.000+00:00",
+  "key": "41000000-0000-0000-0000-000000000001",
+  "headers": [
+    {
+      "key": "event-id",
+      "base64": "AAAAUQAAAAAAAAAAAAAAAQ=="
+    },
+    {
+      "key": "event-type",
+      "text": "AgencyRegistered"
+    },
+    {
+      "key": "schema-version",
+      "text": "1.0"
+    },
+    {
+      "key": "company-id",
+      "text": "30000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "correlation-id",
+      "text": "a1b2c3d4-0000-0000-0000-000000000001"
+    }
+  ],
+  "value": "{\"eventId\":\"52000000-0000-0000-0000-000000000001\",\"eventType\":\"AgencyRegistered\",\"schemaVersion\":\"1.0\",\"companyId\":\"30000000-0000-0000-0000-000000000001\",\"entityId\":\"41000000-0000-0000-0000-000000000001\",\"agencyId\":\"41000000-0000-0000-0000-000000000001\",\"agencyName\":\"Colombo Distribution Agency\",\"provinceId\":\"40000000-0000-0000-0000-000000000001\",\"operatorId\":\"53000000-0000-0000-0000-000000000001\",\"effectiveAt\":\"2026-09-14T10:15:30.1234567+00:00\",\"correlationId\":\"a1b2c3d4-0000-0000-0000-000000000001\"}",
+  "expected": {
+    "eventId": "51000000-0000-0000-0000-000000000001",
+    "eventType": "AgencyRegistered",
+    "aggregateType": "Agency",
+    "aggregateId": "41000000-0000-0000-0000-000000000001",
+    "orderReference": null,
+    "provinceId": "40000000-0000-0000-0000-000000000001",
+    "actorUserId": "53000000-0000-0000-0000-000000000001",
+    "actorRole": null,
+    "correlationId": "a1b2c3d4-0000-0000-0000-000000000001",
+    "occurredAt": "2026-09-14T10:15:30.123456Z"
+  }
+}

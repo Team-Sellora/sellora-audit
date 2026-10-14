@@ -1,0 +1,44 @@
+{
+  "producer": "sellora-order",
+  "source": "OrderEventOutbox.OrderConfirmed (cash sale checkout)",
+  "topic": "sellora.order.v1",
+  "partition": 0,
+  "offset": 101,
+  "timestamp": "2026-09-24T05:12:42.000+00:00",
+  "key": "ORD-260924-K7P2QM",
+  "headers": [
+    {
+      "key": "event-id",
+      "text": "61000000-0000-0000-0000-000000000002"
+    },
+    {
+      "key": "event-type",
+      "text": "OrderConfirmed"
+    },
+    {
+      "key": "schema-version",
+      "text": "1.0"
+    },
+    {
+      "key": "company-id",
+      "text": "30000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "correlation-id",
+      "text": "4f1c2b9e-7d3a-4e8f-b6c5-a1d2e3f4a5b6"
+    }
+  ],
+  "value": "{\"eventId\":\"61000000-0000-0000-0000-000000000002\",\"eventType\":\"OrderConfirmed\",\"schemaVersion\":\"1.0\",\"companyId\":\"30000000-0000-0000-0000-000000000001\",\"entityId\":\"8c1e3d52-6a1f-4b7e-9d2c-0f4e5a6b7c8d\",\"orderId\":\"8c1e3d52-6a1f-4b7e-9d2c-0f4e5a6b7c8d\",\"orderReference\":\"ORD-260924-K7P2QM\",\"reservationId\":\"e2b9f0a4-3c5d-4e6f-8a7b-9c0d1e2f3a4b\",\"occurredAt\":\"2026-09-24T05:12:41.2000000+00:00\",\"correlationId\":\"4f1c2b9e-7d3a-4e8f-b6c5-a1d2e3f4a5b6\",\"fulfilmentType\":\"ImmediateCashSale\",\"status\":\"Confirmed\",\"orderDate\":\"2026-09-24T05:03:10.4410000+00:00\",\"shop\":{\"shopId\":\"44000000-0000-0000-0000-000000000001\",\"name\":\"Lake View Mini Mart \\u0dbd\\u0dda\\u0d9a\\u0dca\",\"ownerName\":\"Chaminda Perera\",\"ownerEmail\":\"chaminda@lakeview.lk\"},\"agency\":{\"agencyId\":\"41000000-0000-0000-0000-000000000001\",\"name\":\"Colombo Distribution Agency\",\"email\":\"orders@colombo-agency.lk\"},\"territoryId\":\"42000000-0000-0000-0000-000000000001\",\"provinceId\":\"40000000-0000-0000-0000-000000000001\",\"salesRep\":{\"salesRepId\":\"43000000-0000-0000-0000-000000000001\",\"name\":\"Nimal Perera\"},\"lines\":[{\"productId\":\"45000000-0000-0000-0000-000000000001\",\"productName\":\"Anchor 400g\",\"quantity\":10,\"unitPrice\":125.50,\"lineTotal\":1255.00}],\"subtotal\":1255.00,\"total\":1255.00,\"currency\":\"LKR\",\"checkoutLocation\":{\"latitude\":6.927079,\"longitude\":79.861244,\"distanceMeters\":42.7,\"accuracyMeters\":8.0,\"checkedInAt\":\"2026-09-24T05:10:02.1200000+00:00\"},\"confirmedAt\":\"2026-09-24T05:12:41.2000000+00:00\"}",
+  "expected": {
+    "eventId": "61000000-0000-0000-0000-000000000002",
+    "eventType": "OrderConfirmed",
+    "aggregateType": "Order",
+    "aggregateId": "8c1e3d52-6a1f-4b7e-9d2c-0f4e5a6b7c8d",
+    "orderReference": "ORD-260924-K7P2QM",
+    "provinceId": "40000000-0000-0000-0000-000000000001",
+    "actorUserId": "43000000-0000-0000-0000-000000000001",
+    "actorRole": "SalesRep",
+    "correlationId": "4f1c2b9e-7d3a-4e8f-b6c5-a1d2e3f4a5b6",
+    "occurredAt": "2026-09-24T05:12:41.200000Z"
+  }
+}
