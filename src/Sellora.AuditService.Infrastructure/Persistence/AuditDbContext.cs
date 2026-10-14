@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sellora.AuditService.Domain.Audit;
+using Sellora.AuditService.Domain.Exports;
 using Sellora.AuditService.Domain.Reporting;
 using Sellora.AuditService.Domain.Tenancy;
 
@@ -30,6 +31,8 @@ public class AuditDbContext : DbContext
     public DbSet<TerritoryDimension> TerritoryDimensions => Set<TerritoryDimension>();
 
     public DbSet<AgencyDimension> AgencyDimensions => Set<AgencyDimension>();
+
+    public DbSet<ReportExport> ReportExports => Set<ReportExport>();
 
     /// <summary>
     /// US-E7-1-BE6, the service layer of the three immutability layers: an
@@ -67,6 +70,8 @@ public class AuditDbContext : DbContext
             _tenantContext.CompanyId != null && territory.CompanyId == _tenantContext.CompanyId);
         modelBuilder.Entity<AgencyDimension>().HasQueryFilter(agency =>
             _tenantContext.CompanyId != null && agency.CompanyId == _tenantContext.CompanyId);
+        modelBuilder.Entity<ReportExport>().HasQueryFilter(export =>
+            _tenantContext.CompanyId != null && export.CompanyId == _tenantContext.CompanyId);
     }
 
     private void RejectAuditChanges()
