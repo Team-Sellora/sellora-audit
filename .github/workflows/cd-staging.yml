@@ -59,7 +59,7 @@ jobs:
             ${{ vars.DOCKERHUB_USERNAME }}/sellora-audit:staging
 
       - name: Deploy staging image
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ vars.AZURE_STAGING_APP_NAME }}
           slot-name: staging

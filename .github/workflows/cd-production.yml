@@ -59,7 +59,7 @@ jobs:
             ${{ vars.DOCKERHUB_USERNAME }}/sellora-audit:latest
 
       - name: Deploy production image
-        uses: azure/webapps-deploy@v3
+        uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ vars.AZURE_PRODUCTION_APP_NAME }}
           publish-profile: ${{ secrets.AZURE_PRODUCTION_PUBLISH_PROFILE }}
