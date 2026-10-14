@@ -15,3 +15,13 @@ public sealed class InitialAuditSchema : Migration
 
     protected override void Down(MigrationBuilder migrationBuilder) => migrationBuilder.Sql(SchemaSql.InitialAuditSchemaDown);
 }
+
+/// <summary>US-E7-2-BE1: the reporting projections.</summary>
+[DbContext(typeof(AuditDbContext))]
+[Migration("20261014090000_ReportingProjections")]
+public sealed class ReportingProjections : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder) => migrationBuilder.Sql(SchemaSql.ReportingProjectionsUp);
+
+    protected override void Down(MigrationBuilder migrationBuilder) => migrationBuilder.Sql(SchemaSql.ReportingProjectionsDown);
+}
