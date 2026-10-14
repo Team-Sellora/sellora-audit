@@ -135,4 +135,38 @@ public static class SchemaSql
         DROP TABLE IF EXISTS reporting.territory_dimension;
         DROP TABLE IF EXISTS reporting.agency_dimension;
         """;
+
+    public const string ReportExportsUp = """
+        CREATE TABLE reporting.report_export (
+            export_id          uuid         NOT NULL,
+            company_id         uuid         NOT NULL,
+            requester_sub      text         NOT NULL,
+            requester_name     text         NOT NULL,
+            requester_role     text         NOT NULL,
+            scope_province_ids uuid[]       NULL,
+            report_type        text         NOT NULL,
+            filters            jsonb        NOT NULL,
+            format             text         NOT NULL,
+            status             text         NOT NULL,
+            created_at         timestamptz  NOT NULL,
+            started_at         timestamptz  NULL,
+            completed_at       timestamptz  NULL,
+            expires_at         timestamptz  NULL,
+            file_name          text         NULL,
+            content_type       text         NULL,
+            content            bytea        NULL,
+            error              varchar(200) NULL,
+            CONSTRAINT pk_report_export PRIMARY KEY (export_id),
+            CONSTRAINT ck_report_export_report_type CHECK (report_type IN ('sales-summary', 'sales-breakdown', 'audit-extract')),
+            CONSTRAINT ck_report_export_format CHECK (format IN ('csv', 'pdf')),
+            CONSTRAINT ck_report_export_status CHECK (status IN ('Queued', 'Running', 'Ready', 'Failed', 'Expired'))
+        );
+
+        CREATE INDEX ix_report_export_status ON reporting.report_export (status, created_at);
+        CREATE INDEX ix_report_export_requester ON reporting.report_export (company_id, requester_sub, created_at DESC);
+        """;
+
+    public const string ReportExportsDown = """
+        DROP TABLE IF EXISTS reporting.report_export;
+        """;
 }

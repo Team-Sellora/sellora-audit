@@ -17,6 +17,10 @@ public sealed class HttpCurrentUserContext(IHttpContextAccessor accessor) : ICur
 
     public string? Subject => User?.FindFirst("sub")?.Value;
 
+    public string? Name => new[] { "name", "preferred_username", "username", "email" }
+        .Select(type => User?.FindFirst(type)?.Value)
+        .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
+
     public string? Role => RoleClaims.Broadest(User);
 
     public Guid? CompanyId => RoleClaims.CompanyId(User);

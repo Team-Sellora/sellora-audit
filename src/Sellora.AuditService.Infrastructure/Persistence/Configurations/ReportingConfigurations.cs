@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Sellora.AuditService.Domain.Exports;
 using Sellora.AuditService.Domain.Reporting;
 
 namespace Sellora.AuditService.Infrastructure.Persistence.Configurations;
@@ -110,5 +111,38 @@ public sealed class AgencyDimensionConfiguration : IEntityTypeConfiguration<Agen
         builder.Property(agency => agency.AgencyId).HasColumnName("agency_id").HasColumnType("uuid").ValueGeneratedNever();
         builder.Property(agency => agency.Name).HasColumnName("name").HasColumnType("text");
         builder.Property(agency => agency.ProvinceId).HasColumnName("province_id").HasColumnType("uuid");
+    }
+}
+
+public sealed class ReportExportConfiguration : IEntityTypeConfiguration<ReportExport>
+{
+    public void Configure(EntityTypeBuilder<ReportExport> builder)
+    {
+        builder.ToTable("report_export", "reporting");
+        builder.HasKey(export => export.ExportId).HasName("pk_report_export");
+
+        builder.Property(export => export.ExportId).HasColumnName("export_id").HasColumnType("uuid").ValueGeneratedNever();
+        builder.Property(export => export.CompanyId).HasColumnName("company_id").HasColumnType("uuid").IsRequired();
+        builder.Property(export => export.RequesterSub).HasColumnName("requester_sub").HasColumnType("text").IsRequired();
+        builder.Property(export => export.RequesterName).HasColumnName("requester_name").HasColumnType("text").IsRequired();
+        builder.Property(export => export.RequesterRole).HasColumnName("requester_role").HasColumnType("text").IsRequired();
+        builder.Property(export => export.ScopeProvinceIds).HasColumnName("scope_province_ids").HasColumnType("uuid[]");
+        builder.Property(export => export.ReportType).HasColumnName("report_type").HasColumnType("text").IsRequired();
+        builder.Property(export => export.FiltersJson).HasColumnName("filters").HasColumnType("jsonb").IsRequired();
+        builder.Property(export => export.Format).HasColumnName("format").HasColumnType("text").IsRequired();
+        builder.Property(export => export.Status).HasColumnName("status").HasColumnType("text").HasConversion<string>().IsRequired();
+        builder.Property(export => export.CreatedAt).HasColumnName("created_at").HasColumnType("timestamp with time zone").IsRequired();
+        builder.Property(export => export.StartedAt).HasColumnName("started_at").HasColumnType("timestamp with time zone");
+        builder.Property(export => export.CompletedAt).HasColumnName("completed_at").HasColumnType("timestamp with time zone");
+        builder.Property(export => export.ExpiresAt).HasColumnName("expires_at").HasColumnType("timestamp with time zone");
+        builder.Property(export => export.FileName).HasColumnName("file_name").HasColumnType("text");
+        builder.Property(export => export.ContentType).HasColumnName("content_type").HasColumnType("text");
+        builder.Property(export => export.Content).HasColumnName("content").HasColumnType("bytea");
+        builder.Property(export => export.Error).HasColumnName("error").HasColumnType("character varying(200)").HasMaxLength(ReportExport.MaxErrorLength);
+
+        builder.HasIndex(export => new { export.Status, export.CreatedAt }).HasDatabaseName("ix_report_export_status");
+        builder.HasIndex(export => new { export.CompanyId, export.RequesterSub, export.CreatedAt })
+            .HasDatabaseName("ix_report_export_requester")
+            .IsDescending(false, false, true);
     }
 }

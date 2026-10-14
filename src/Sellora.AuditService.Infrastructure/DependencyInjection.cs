@@ -2,10 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sellora.AuditService.Application.Audit;
+using Sellora.AuditService.Application.Exports;
 using Sellora.AuditService.Application.Ingestion;
 using Sellora.AuditService.Application.Reporting;
 using Sellora.AuditService.Infrastructure.Audit;
 using Sellora.AuditService.Infrastructure.Dependencies;
+using Sellora.AuditService.Infrastructure.Exports;
 using Sellora.AuditService.Infrastructure.Ingestion;
 using Sellora.AuditService.Infrastructure.Kafka;
 using Sellora.AuditService.Infrastructure.Persistence;
@@ -43,6 +45,7 @@ public static class DependencyInjection
         services.Configure<AuditKafkaOptions>(configuration.GetSection(AuditKafkaOptions.SectionName));
 
         services.Configure<ReportingOptions>(configuration.GetSection(ReportingOptions.SectionName));
+        services.Configure<ExportOptions>(configuration.GetSection(ExportOptions.SectionName));
 
         services.AddScoped<IReportingProjector, ReportingProjector>();
         services.AddScoped<IAuditStore, AuditStore>();
@@ -56,9 +59,15 @@ public static class DependencyInjection
         services.AddScoped<IReportQueryService, CachedReportQueryService>();
         services.AddScoped<IProjectionRebuildService, ProjectionRebuildService>();
 
+        PdfExportWriter.UseCommunityLicence();
+        services.AddScoped<IExportService, ExportService>();
+        services.AddScoped<IExportGenerator, ExportGenerator>();
+
         if (runBackgroundServices)
         {
             services.AddHostedService<AuditEventConsumerService>();
+            services.AddHostedService<ExportWorkerService>();
+            services.AddHostedService<ExportCleanupService>();
         }
 
         return services;

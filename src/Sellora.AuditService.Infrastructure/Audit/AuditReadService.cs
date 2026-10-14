@@ -42,6 +42,27 @@ public sealed class AuditReadService(AuditDbContext db) : IAuditReadService
         return entry is null ? null : ToDetail(entry);
     }
 
+    public async Task<IReadOnlyList<AuditEntryDetail>> ExtractPageAsync(
+        AuditReadScope scope, AuditSearchQuery query, AuditExtractCursor? after, int take, CancellationToken cancellationToken)
+    {
+        ArgumentOutOfRangeException.ThrowIfLessThan(take, 1);
+
+        var entries = Filter(Scoped(scope), query);
+
+        // Keyset paging: entries appended during the export never shift a page.
+        if (after is { } cursor)
+        {
+            entries = query.IsTimeline
+                ? entries.Where(entry => entry.OccurredAt > cursor.OccurredAt ||
+                                         (entry.OccurredAt == cursor.OccurredAt && entry.ChainPosition > cursor.ChainPosition))
+                : entries.Where(entry => entry.OccurredAt < cursor.OccurredAt ||
+                                         (entry.OccurredAt == cursor.OccurredAt && entry.ChainPosition < cursor.ChainPosition));
+        }
+
+        var page = await Order(entries, query).Take(take).ToListAsync(cancellationToken);
+        return page.Select(ToDetail).ToList();
+    }
+
     private IQueryable<AuditEntry> Scoped(AuditReadScope scope)
     {
         var entries = db.AuditEntries.AsNoTracking().Where(entry => entry.CompanyId == scope.CompanyId);

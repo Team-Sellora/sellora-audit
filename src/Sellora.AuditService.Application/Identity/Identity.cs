@@ -30,6 +30,9 @@ public interface ICurrentUserContext
 {
     string? Subject { get; }
 
+    /// <summary>The display name from the token, for export headers.</summary>
+    string? Name { get; }
+
     /// <summary>The broadest Sellora role the caller holds, or null.</summary>
     string? Role { get; }
 

@@ -91,10 +91,17 @@ public sealed record AuditEntryDetail(
     string Hash,
     string Payload);
 
+/// <summary>The last row of an extract page; the next page starts after it.</summary>
+public sealed record AuditExtractCursor(DateTimeOffset OccurredAt, long ChainPosition);
+
 public interface IAuditReadService
 {
     Task<PagedResponse<AuditEntrySummary>> SearchAsync(AuditReadScope scope, AuditSearchQuery query, CancellationToken cancellationToken);
 
     /// <summary>Null when the entry does not exist or is outside the scope.</summary>
     Task<AuditEntryDetail?> GetAsync(AuditReadScope scope, Guid auditEntryId, CancellationToken cancellationToken);
+
+    /// <summary>US-E7-3-BE2: one page of the search, in the on-screen order, for an export.</summary>
+    Task<IReadOnlyList<AuditEntryDetail>> ExtractPageAsync(
+        AuditReadScope scope, AuditSearchQuery query, AuditExtractCursor? after, int take, CancellationToken cancellationToken);
 }

@@ -43,18 +43,30 @@ public sealed class AuditRouteImmutabilityTests : IClassFixture<AuditApiFactory>
     }
 
     [Fact]
-    public void The_only_non_get_route_is_the_projection_rebuild()
+    public void The_only_non_get_routes_are_the_projection_rebuild_and_the_export_submission()
     {
-        // US-E7-2-BE6 rebuilds reporting projections; nothing may write through any other route.
+        // US-E7-2-BE6 rebuilds projections and US-E7-3-BE1 queues exports; nothing else may write.
+        var allowed = new[] { "api/reports/projections/rebuild", "api/reports/export" };
+
         var offenders = Routes()
             .Where(route => route.Verbs.Any(verb => verb is not ("GET" or "HEAD")))
-            .Where(route => !(route.Template.StartsWith("api/reports/projections/", StringComparison.OrdinalIgnoreCase) &&
-                              route.Verbs.SequenceEqual(new[] { "POST" })))
+            .Where(route => !(allowed.Contains(route.Template, StringComparer.OrdinalIgnoreCase) && route.Verbs.SequenceEqual(new[] { "POST" })))
             .Select(route => $"{route.Name}: {string.Join(',', route.Verbs)} {route.Template}")
             .ToList();
 
         Assert.Empty(offenders);
-        Assert.Contains(Routes(), route => route.Template == "api/reports/projections/rebuild" && route.Verbs.SequenceEqual(new[] { "POST" }));
+        Assert.All(allowed, template =>
+            Assert.Contains(Routes(), route => route.Template == template && route.Verbs.SequenceEqual(new[] { "POST" })));
+    }
+
+    [Fact]
+    public void The_host_maps_the_export_routes()
+    {
+        var templates = Routes().Select(route => route.Template).ToList();
+
+        Assert.Contains("api/reports/export", templates);
+        Assert.Contains("api/reports/export/{exportId:guid}", templates);
+        Assert.Contains("api/reports/export/{exportId:guid}/file", templates);
     }
 
     [Fact]
