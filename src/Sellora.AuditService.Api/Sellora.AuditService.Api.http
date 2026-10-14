@@ -16,3 +16,15 @@ Authorization: Bearer {{token}}
 ### Verify the company's hash chain (Company Admin)
 GET {{host}}/api/audit/verify
 Authorization: Bearer {{token}}
+
+### Sales summary for September with August as the comparison (Colombo dates, both ends inclusive)
+GET {{host}}/api/reports/sales-summary?from=2026-09-01&to=2026-09-30&compareFrom=2026-08-01&compareTo=2026-08-31
+Authorization: Bearer {{token}}
+
+### Sales by rep, highest value first
+GET {{host}}/api/reports/sales-breakdown?groupBy=rep&from=2026-09-01&to=2026-09-30&sort=value&direction=desc
+Authorization: Bearer {{token}}
+
+### Rebuild the company's reporting projections from the audit log (Company Admin)
+POST {{host}}/api/reports/projections/rebuild
+Authorization: Bearer {{token}}
