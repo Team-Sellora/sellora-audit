@@ -1,0 +1,40 @@
+{
+  "producer": "sellora-delivery",
+  "source": "ReturnsController.DecideReturn (ReturnAcceptedEvent, default JSON options), KafkaEventPublisher x- headers (dev)",
+  "topic": "sellora.delivery.v1",
+  "partition": 0,
+  "offset": 30,
+  "timestamp": "2026-10-01T09:30:01.000+00:00",
+  "key": "RT-261001-ABC123",
+  "headers": [
+    {
+      "key": "x-event-type",
+      "text": "ReturnAccepted"
+    },
+    {
+      "key": "x-company-id",
+      "text": "30000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "x-correlation-id",
+      "text": "83000000-0000-0000-0000-000000000003"
+    },
+    {
+      "key": "x-service-source",
+      "text": "sellora-delivery"
+    }
+  ],
+  "value": "{\"EventId\":\"82000000-0000-0000-0000-000000000003\",\"EventType\":\"ReturnAccepted\",\"SchemaVersion\":\"1.0\",\"CompanyId\":\"30000000-0000-0000-0000-000000000001\",\"EntityId\":\"85000000-0000-0000-0000-000000000001\",\"InventoryOwnerId\":\"73000000-0000-0000-0000-000000000001\",\"ReturnReference\":\"RT-261001-ABC123\",\"Lines\":[{\"ProductId\":\"45000000-0000-0000-0000-000000000001\",\"BatchId\":null,\"Quantity\":2,\"ProductName\":\"Anchor 400g\"}],\"AcceptedAt\":\"2026-10-01T09:30:00+00:00\",\"CorrelationId\":\"return-approval-77\"}",
+  "expected": {
+    "eventId": "82000000-0000-0000-0000-000000000003",
+    "eventType": "ReturnAccepted",
+    "aggregateType": "Return",
+    "aggregateId": "85000000-0000-0000-0000-000000000001",
+    "orderReference": null,
+    "provinceId": null,
+    "actorUserId": "unknown",
+    "actorRole": null,
+    "correlationId": "83000000-0000-0000-0000-000000000003",
+    "occurredAt": "2026-10-01T09:30:00.000000Z"
+  }
+}

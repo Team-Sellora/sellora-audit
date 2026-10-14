@@ -1,0 +1,40 @@
+{
+  "producer": "sellora-delivery",
+  "source": "DeliveriesController.UpdateStatus (default JSON options), KafkaEventPublisher x- headers (dev)",
+  "topic": "sellora.delivery.v1",
+  "partition": 0,
+  "offset": 15,
+  "timestamp": "2026-09-27T03:45:13.000+00:00",
+  "key": "ORD-260924-K7P2QM",
+  "headers": [
+    {
+      "key": "x-event-type",
+      "text": "DeliveryStatusChanged"
+    },
+    {
+      "key": "x-company-id",
+      "text": "30000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "x-correlation-id",
+      "text": "83000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "x-service-source",
+      "text": "sellora-delivery"
+    }
+  ],
+  "value": "{\"EventId\":\"82000000-0000-0000-0000-000000000001\",\"EventType\":\"DeliveryStatusChanged\",\"SchemaVersion\":\"1.0\",\"CompanyId\":\"30000000-0000-0000-0000-000000000001\",\"DeliveryId\":\"81000000-0000-0000-0000-000000000001\",\"OrderId\":\"8c1e3d52-6a1f-4b7e-9d2c-0f4e5a6b7c8d\",\"OrderReference\":\"ORD-260924-K7P2QM\",\"PreviousStatus\":\"Assigned\",\"Status\":\"InTransit\",\"OccurredAt\":\"2026-09-27T03:45:12.3456789+00:00\",\"CorrelationId\":null,\"Reason\":null,\"ScheduledFor\":\"2026-09-27\",\"Shop\":{\"ShopId\":\"44000000-0000-0000-0000-000000000001\",\"Name\":\"Lake View Mini Mart\",\"OwnerName\":\"Chaminda Perera\",\"OwnerEmail\":\"chaminda@lakeview.lk\"},\"Agency\":{\"AgencyId\":\"41000000-0000-0000-0000-000000000001\",\"Name\":\"Colombo Distribution Agency\",\"Email\":\"orders@colombo-agency.lk\"},\"DeliveryReference\":\"DL-260927-A1B2C3\",\"TerritoryId\":\"42000000-0000-0000-0000-000000000001\",\"ProvinceId\":\"40000000-0000-0000-0000-000000000001\",\"Actor\":{\"UserId\":\"rep-sub-001\",\"Role\":\"SalesRep\"}}",
+  "expected": {
+    "eventId": "82000000-0000-0000-0000-000000000001",
+    "eventType": "DeliveryStatusChanged",
+    "aggregateType": "Delivery",
+    "aggregateId": "81000000-0000-0000-0000-000000000001",
+    "orderReference": "ORD-260924-K7P2QM",
+    "provinceId": "40000000-0000-0000-0000-000000000001",
+    "actorUserId": "rep-sub-001",
+    "actorRole": "SalesRep",
+    "correlationId": "83000000-0000-0000-0000-000000000001",
+    "occurredAt": "2026-09-27T03:45:12.345678Z"
+  }
+}

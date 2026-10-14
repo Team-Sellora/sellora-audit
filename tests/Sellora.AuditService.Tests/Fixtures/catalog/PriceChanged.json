@@ -1,0 +1,40 @@
+{
+  "producer": "sellora-catalog",
+  "source": "ProductService.ChangePriceAsync (PriceChangedEvent, Web JSON options), KafkaEventPublisher (dev)",
+  "topic": "sellora.catalog.v1",
+  "partition": 0,
+  "offset": 7,
+  "timestamp": "2026-09-20T03:30:01.000+00:00",
+  "key": "45000000-0000-0000-0000-000000000001",
+  "headers": [
+    {
+      "key": "event-id",
+      "base64": "AAAAUQAAAAAAAAAAAAAAAw=="
+    },
+    {
+      "key": "event-type",
+      "text": "PriceChanged"
+    },
+    {
+      "key": "schema-version",
+      "text": "1.0"
+    },
+    {
+      "key": "company-id",
+      "text": "30000000-0000-0000-0000-000000000001"
+    }
+  ],
+  "value": "{\"companyId\":\"30000000-0000-0000-0000-000000000001\",\"productId\":\"45000000-0000-0000-0000-000000000001\",\"oldUnitPrice\":120.00,\"newUnitPrice\":125.50,\"changedBy\":\"admin-sub-001\",\"reason\":\"Supplier price increase\",\"changedAt\":\"2026-09-20T03:30:00.5+00:00\",\"effectiveFrom\":\"2026-09-21T00:00:00+00:00\"}",
+  "expected": {
+    "eventId": "51000000-0000-0000-0000-000000000003",
+    "eventType": "PriceChanged",
+    "aggregateType": "Product",
+    "aggregateId": "45000000-0000-0000-0000-000000000001",
+    "orderReference": null,
+    "provinceId": null,
+    "actorUserId": "admin-sub-001",
+    "actorRole": null,
+    "correlationId": null,
+    "occurredAt": "2026-09-20T03:30:00.500000Z"
+  }
+}
