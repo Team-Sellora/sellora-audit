@@ -7,7 +7,8 @@ production deploys from `main`.
 
 ## One-time Azure setup
 
-1. Create a Linux Azure App Service configured for a Docker Hub container.
+1. Create a Linux Azure App Service configured for a classic single Docker Hub
+   container (do not enable sidecar support).
    Set its container port to `8080`, and leave its startup command empty.
 2. Create a `staging` deployment slot on the App Service if staging and
    production use the same App Service.
