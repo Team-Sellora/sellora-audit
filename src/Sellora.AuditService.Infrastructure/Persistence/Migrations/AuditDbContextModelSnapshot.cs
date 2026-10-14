@@ -149,6 +149,101 @@ namespace Sellora.AuditService.Infrastructure.Persistence.Migrations
                     b.ToTable("audit_entry", "audit");
                 });
 
+            modelBuilder.Entity("Sellora.AuditService.Domain.Exports.ReportExport", b =>
+                {
+                    b.Property<Guid>("ExportId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("export_id");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("completed_at");
+
+                    b.Property<byte[]>("Content")
+                        .HasColumnType("bytea")
+                        .HasColumnName("content");
+
+                    b.Property<string>("ContentType")
+                        .HasColumnType("text")
+                        .HasColumnName("content_type");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Error")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)")
+                        .HasColumnName("error");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("FileName")
+                        .HasColumnType("text")
+                        .HasColumnName("file_name");
+
+                    b.Property<string>("FiltersJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("filters");
+
+                    b.Property<string>("Format")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("format");
+
+                    b.Property<string>("ReportType")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("report_type");
+
+                    b.Property<string>("RequesterName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("requester_name");
+
+                    b.Property<string>("RequesterRole")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("requester_role");
+
+                    b.Property<string>("RequesterSub")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("requester_sub");
+
+                    b.Property<Guid[]>("ScopeProvinceIds")
+                        .HasColumnType("uuid[]")
+                        .HasColumnName("scope_province_ids");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("started_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.HasKey("ExportId")
+                        .HasName("pk_report_export");
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("ix_report_export_status");
+
+                    b.HasIndex("CompanyId", "RequesterSub", "CreatedAt")
+                        .IsDescending(false, false, true)
+                        .HasDatabaseName("ix_report_export_requester");
+
+                    b.ToTable("report_export", "reporting");
+                });
+
             modelBuilder.Entity("Sellora.AuditService.Domain.Reporting.AgencyDimension", b =>
                 {
                     b.Property<Guid>("CompanyId")

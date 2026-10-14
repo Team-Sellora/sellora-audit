@@ -25,3 +25,13 @@ public sealed class ReportingProjections : Migration
 
     protected override void Down(MigrationBuilder migrationBuilder) => migrationBuilder.Sql(SchemaSql.ReportingProjectionsDown);
 }
+
+/// <summary>US-E7-3-BE1: export jobs and their files.</summary>
+[DbContext(typeof(AuditDbContext))]
+[Migration("20261015090000_ReportExports")]
+public sealed class ReportExports : Migration
+{
+    protected override void Up(MigrationBuilder migrationBuilder) => migrationBuilder.Sql(SchemaSql.ReportExportsUp);
+
+    protected override void Down(MigrationBuilder migrationBuilder) => migrationBuilder.Sql(SchemaSql.ReportExportsDown);
+}
