@@ -4,7 +4,7 @@ using Sellora.AuditService.Application.Identity;
 namespace Sellora.AuditService.Api.Controllers;
 
 /// <summary>What the caller may read: the whole company, or an Area Manager's provinces.</summary>
-public sealed record CallerAccess(Guid CompanyId, string Subject, string Role, IReadOnlyCollection<Guid>? ProvinceIds);
+public sealed record CallerAccess(Guid CompanyId, string Subject, string Name, string Role, IReadOnlyCollection<Guid>? ProvinceIds);
 
 public static class CallerScopes
 {
@@ -19,7 +19,7 @@ public static class CallerScopes
         // Company Admins see the whole company; an Area Manager only their provinces.
         IReadOnlyCollection<Guid>? provinces = role == SelloraRoles.CompanyAdmin ? null : caller.ProvinceIds.ToList();
 
-        return new CallerAccess(companyId, caller.Subject, role, provinces);
+        return new CallerAccess(companyId, caller.Subject, caller.Name ?? caller.Subject, role, provinces);
     }
 
     public static ObjectResult Problem(int status, string title, string? detail) =>

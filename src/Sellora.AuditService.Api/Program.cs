@@ -88,7 +88,8 @@ builder.Services.AddCors(options =>
             policy.WithOrigins(allowedOrigins);
         }
 
-        policy.AllowAnyHeader().AllowAnyMethod();
+        // The web app reads the export file name from Content-Disposition.
+        policy.AllowAnyHeader().AllowAnyMethod().WithExposedHeaders("Content-Disposition");
     });
 });
 
