@@ -4,9 +4,8 @@
 --   audit_app    the runtime role. SELECT and INSERT on the audit schema,
 --                nothing else, so the audit log cannot be altered with the
 --                service's own credentials. SELECT, INSERT, UPDATE and
---                DELETE on the reporting schema: the projections rebuilt
---                from the audit log (US-E7-2) and the export jobs
---                (reporting.report_export, US-E7-3).
+--                DELETE on the reporting schema, whose projections are
+--                rebuilt from the audit log (US-E7-2).
 --
 -- Run as an administrator of audit_db, before and again after migrations.
 -- It is idempotent and holds no secrets:
@@ -24,8 +23,21 @@ WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'audit_owner') \gexec
 SELECT 'CREATE ROLE audit_app LOGIN'
 WHERE NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'audit_app') \gexec
 
-SELECT format('ALTER ROLE audit_owner WITH LOGIN NOSUPERUSER NOCREATEROLE NOCREATEDB PASSWORD %L', :'owner_password') \gexec
-SELECT format('ALTER ROLE audit_app WITH LOGIN NOSUPERUSER NOCREATEROLE NOCREATEDB NOINHERIT PASSWORD %L', :'app_password') \gexec
+SELECT format('ALTER ROLE audit_owner WITH LOGIN NOCREATEROLE NOCREATEDB PASSWORD %L', :'owner_password') \gexec
+SELECT format('ALTER ROLE audit_app WITH LOGIN NOCREATEROLE NOCREATEDB NOINHERIT PASSWORD %L', :'app_password') \gexec
+
+-- The connected admin must be able to act as audit_owner to give it the
+-- schemas below. A non-superuser admin (Azure) needs an explicit grant, and
+-- PostgreSQL 16 and later also need SET and INHERIT on that grant.
+DO $$
+BEGIN
+    IF current_setting('server_version_num')::int >= 160000 THEN
+        EXECUTE 'GRANT audit_owner TO CURRENT_USER WITH SET TRUE, INHERIT TRUE';
+    ELSE
+        EXECUTE 'GRANT audit_owner TO CURRENT_USER';
+    END IF;
+END
+$$;
 
 -- The runtime role must never inherit the owner's rights.
 SELECT 'REVOKE audit_owner FROM audit_app'
