@@ -1,42 +1,84 @@
 # Sellora Audit Service
 
-Epic E7: audit log, reporting and exports for Sellora. This branch holds only the
-service skeleton (a host with a health endpoint) so the build and deployment
-pipeline can be set up before feature work starts.
+Epic E7. This branch delivers US-E7-1 (CSP-250): every business event from the
+five Sellora topics is stored in an append-only, hash-chained audit log per
+company, which Company Admins and Area Managers can search and verify.
+Design and QA notes: [docs/US-E7-1.md](docs/US-E7-1.md).
 
-Layout, same as sellora-order: `src/` holds `Domain`, `Application`,
-`Infrastructure` and `Api`; `tests/` holds `Sellora.AuditService.Tests`. .NET 8.
+Same layout as sellora-order: `Domain` → `Application` → `Infrastructure` → `Api`, plus `tests`. .NET 8.
 
-## Build and test
+## Run it locally
 
-```bash
-dotnet restore
-dotnet build -c Release --no-restore
-dotnet test -c Release --no-build
-```
-
-The tests need no database or Docker.
-
-## Run
+Prerequisites: .NET 8 SDK, Docker, and Kafka from `sellora-infra`'s compose file on `localhost:9092`.
 
 ```bash
-dotnet run --project src/Sellora.AuditService.Api   # http://localhost:5208/health
+# 1. Database with the real roles (audit_owner, audit_app) on port 5438.
+cp .env.example .env            # local-only passwords
+docker compose up -d audit-db
+
+# 2. Migrations, as audit_owner (the app never migrates itself).
+#    ADMIN_CONNECTION re-applies the grants afterwards; it needs psql on the PATH.
+ADMIN_CONNECTION="postgresql://postgres:postgres_dev_pw@localhost:5438/audit_db" \
+AUDIT_OWNER_PASSWORD=audit_owner_dev_pw AUDIT_APP_PASSWORD=audit_app_dev_pw \
+  ./scripts/run-migrations.sh
+
+# 3. Runtime connection string, as audit_app.
+dotnet user-secrets --project src/Sellora.AuditService.Api set "ConnectionStrings:Default" \
+  "Host=localhost;Port=5438;Database=audit_db;Username=audit_app;Password=audit_app_dev_pw"
+
+# 4. Run (http://localhost:5208, Swagger at /swagger in Development).
+dotnet run --project src/Sellora.AuditService.Api
 ```
 
-With Docker (container port 8080):
+With Docker: `docker build -t sellora-audit .` then `docker run -p 8080:8080 -e ConnectionStrings__Default=... sellora-audit`.
+The container listens on 8080; `GET /health` returns `200 {"status":"Healthy"}` and does not depend on the database or Kafka.
+
+## API
+
+| Route | Roles |
+|---|---|
+| `GET /api/audit?orderReference&aggregateType&aggregateId&actorUserId&eventType&from&to&page&pageSize` | CompanyAdmin, AreaManager |
+| `GET /api/audit/{auditEntryId}` | CompanyAdmin, AreaManager |
+| `GET /api/audit/verify` | CompanyAdmin |
+
+The company always comes from the token. Area Managers see only their provinces (from Organization). Examples: `src/Sellora.AuditService.Api/Sellora.AuditService.Api.http`.
+
+## Configuration
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `ConnectionStrings__Default` | `audit_app` on `localhost:5438`, no password | Runtime role: SELECT and INSERT on `audit.audit_entry` only |
+| `ConnectionStrings__Owner` | — | Migrations only (`scripts/run-migrations.sh`, `dotnet ef`) |
+| `Kafka__BootstrapServers` | `localhost:9092` | |
+| `Kafka__SaslUsername` / `Kafka__SaslPassword` | empty | Confluent Cloud API key and secret; SASL_SSL/PLAIN is used when a username is set |
+| `Kafka__Topics` | the five `sellora.*.v1` topics | Source topics |
+| `Kafka__ConsumerGroupId` | `sellora.audit.v1` | |
+| `Kafka__DeadLetterTopic` | `sellora.audit.dead-letter.v1` | [contract](docs/contracts/audit-dead-letter.v1.md) |
+| `Kafka__AutoOffsetReset` | `Earliest` | First deploy back-fills what the topics still retain |
+| `Kafka__RetryDelaySeconds` | `5` | Wait before replaying after a failure |
+| `Dependencies__Organization__BaseUrl` | `http://localhost:8081` | Area Manager provinces (`GET /api/me/scope`) |
+| `CallerScope__CacheSeconds` | `60` | Cache for an Area Manager's provinces |
+| `Cors__AllowedOrigins` | `http://localhost:5173` | |
+| `Jwt__*` | WSO2 values, as in sellora-order | Raw claim names (`roles`, `companyId`, `sub`) |
+
+## Tests
 
 ```bash
-docker build -t sellora-audit .
-docker run --rm -p 8080:8080 sellora-audit           # http://localhost:8080/health
+dotnet test                                                   # everything; Docker must be running
+dotnet test --filter "FullyQualifiedName!~Integration&FullyQualifiedName!~AuditApiTests"   # no Docker needed
 ```
 
-`GET /health` returns `200` with `{"status":"Healthy"}`. No environment variables are required.
+- `Unit`: envelope normalisation against real producer fixtures (`tests/.../Fixtures`), hash chain with fixed vectors, consumer settings and mapping, role claims.
+- `Integration`: Testcontainers PostgreSQL 16 with the real roles script and migrations (the runtime role cannot UPDATE/DELETE/TRUNCATE, tamper detection, idempotent and concurrent appends, scoping) and Testcontainers Kafka (all five topics, dead-letter, replay after a failure without duplicates, a missing topic).
+- `Api`: the real host's routes are read only; 401, 403, 400, 404, 405 and 503 behaviour; Area Manager scoping against PostgreSQL.
 
-`docker compose up -d audit-db` starts a local PostgreSQL 16 on port 5438
-(copy `.env.example` to `.env` first). The skeleton does not use it yet.
+## Load test data (US-E7-1-Q7)
 
-## Planned stories (not implemented yet)
+```bash
+psql "host=localhost port=5438 dbname=audit_db user=audit_owner" \
+  -v company_id=<company uuid> -v entries=100000 -v orders=20000 -v days=90 \
+  -f scripts/seed-audit-entries.sql
+```
 
-- CSP-250: immutable audit log
-- CSP-252: reporting
-- CSP-253: exports
+Continues the company's chain with valid hashes, so verify still passes. Test databases only.
+Measured locally (PostgreSQL 16 in Docker, 100,000 entries): seeding 10.7 s, verify 3.1 s, order-reference search 0.3 ms and a 7-day page 0.15 ms at the database.
