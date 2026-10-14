@@ -3,6 +3,7 @@
 *.userosscache
 *.sln.docstats
 .vs/
+.vscode/
 [Bb]in/
 [Oo]bj/
 [Oo]ut/
