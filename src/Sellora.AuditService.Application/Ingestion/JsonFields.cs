@@ -69,6 +69,26 @@ public static class JsonFields
             ? parsed
             : null;
 
+    public static decimal? Decimal(JsonElement element, string name)
+    {
+        if (!TryGet(element, name, out var value))
+        {
+            return null;
+        }
+
+        return value.ValueKind switch
+        {
+            JsonValueKind.Number when value.TryGetDecimal(out var number) => number,
+            JsonValueKind.String when decimal.TryParse(value.GetString(), NumberStyles.Number, CultureInfo.InvariantCulture, out var text) => text,
+            _ => null
+        };
+    }
+
+    public static int? Int(JsonElement element, string name) =>
+        TryGet(element, name, out var value) && value.ValueKind == JsonValueKind.Number && value.TryGetInt32(out var number)
+            ? number
+            : null;
+
     public static JsonElement? Object(JsonElement element, string name) =>
         TryGet(element, name, out var value) && value.ValueKind == JsonValueKind.Object ? value : null;
 }
