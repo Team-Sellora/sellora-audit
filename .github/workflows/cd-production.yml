@@ -12,8 +12,64 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  migrate-production:
+    name: Apply production database migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install PostgreSQL client
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Create database roles and schemas
+        shell: bash
+        env:
+          ADMIN_CONNECTION: ${{ secrets.ADMIN_CONNECTION }}
+          AUDIT_OWNER_PASSWORD: ${{ secrets.AUDIT_OWNER_PASSWORD }}
+          AUDIT_APP_PASSWORD: ${{ secrets.AUDIT_APP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          psql "$ADMIN_CONNECTION" -v ON_ERROR_STOP=1 \
+            -v owner_password="$AUDIT_OWNER_PASSWORD" \
+            -v app_password="$AUDIT_APP_PASSWORD" \
+            -f scripts/create-db-roles.sql
+
+      - name: Apply database migrations
+        shell: bash
+        env:
+          ConnectionStrings__Owner: ${{ secrets.ConnectionStrings__Owner }}
+        run: |
+          set -euo pipefail
+          ./scripts/run-migrations.sh
+
+      - name: Grant the application access to migrated tables
+        shell: bash
+        env:
+          ADMIN_CONNECTION: ${{ secrets.ADMIN_CONNECTION }}
+          AUDIT_OWNER_PASSWORD: ${{ secrets.AUDIT_OWNER_PASSWORD }}
+          AUDIT_APP_PASSWORD: ${{ secrets.AUDIT_APP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          psql "$ADMIN_CONNECTION" -v ON_ERROR_STOP=1 \
+            -v owner_password="$AUDIT_OWNER_PASSWORD" \
+            -v app_password="$AUDIT_APP_PASSWORD" \
+            -f scripts/create-db-roles.sql
+
   deploy-production:
     name: Deploy Audit to Azure production
+    needs: migrate-production
     runs-on: ubuntu-latest
     timeout-minutes: 25
     environment: production
