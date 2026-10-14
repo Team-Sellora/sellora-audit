@@ -8,6 +8,7 @@ built from that log.
 |---|---|---|
 | US-E7-1 (CSP-250) | Immutable audit log: search, entry detail, chain verification | [docs/US-E7-1.md](docs/US-E7-1.md) |
 | US-E7-2 (CSP-252) | Reporting projections and sales dashboards (summary, breakdown, rebuild) | [docs/US-E7-2.md](docs/US-E7-2.md) |
+| US-E7-3 (CSP-253) | Asynchronous CSV and PDF exports of the reports and audit extracts | [docs/US-E7-3.md](docs/US-E7-3.md) |
 
 Same layout as sellora-order: `Domain` → `Application` → `Infrastructure` → `Api`, plus `tests`. .NET 8.
 
@@ -47,6 +48,10 @@ The container listens on 8080; `GET /health` returns `200 {"status":"Healthy"}` 
 | `GET /api/reports/sales-summary?from&to[&compareFrom&compareTo]` | CompanyAdmin, AreaManager |
 | `GET /api/reports/sales-breakdown?groupBy&from&to[&sort&direction]` | CompanyAdmin, AreaManager |
 | `POST /api/reports/projections/rebuild` | CompanyAdmin |
+| `POST /api/reports/export` | CompanyAdmin, AreaManager (`audit-extract`: CompanyAdmin) |
+| `GET /api/reports/export` | CompanyAdmin, AreaManager (own exports) |
+| `GET /api/reports/export/{exportId}` | CompanyAdmin, AreaManager (own exports) |
+| `GET /api/reports/export/{exportId}/file` | CompanyAdmin, AreaManager (own exports) |
 
 The company always comes from the token. Area Managers see only their provinces (from Organization). Examples: `src/Sellora.AuditService.Api/Sellora.AuditService.Api.http`.
 
@@ -66,6 +71,9 @@ The company always comes from the token. Area Managers see only their provinces 
 | `Dependencies__Organization__BaseUrl` | `http://localhost:8081` | Area Manager provinces (`GET /api/me/scope`) and territory names (`GET /api/hierarchy`) |
 | `CallerScope__CacheSeconds` | `60` | Cache for an Area Manager's provinces |
 | `Reporting__CacheSeconds` | `60` | In-process cache for report responses (no Redis); `0` turns it off |
+| `Exports__PollSeconds` | `5` | How often the export worker looks for queued jobs |
+| `Exports__ExpiryHours` | `24` | How long a finished export can be downloaded |
+| `Exports__CleanupMinutes` | `60` | How often expired export files are removed |
 | `Cors__AllowedOrigins` | `http://localhost:5173` | |
 | `Jwt__*` | WSO2 values, as in sellora-order | Raw claim names (`roles`, `companyId`, `sub`) |
 
@@ -76,9 +84,9 @@ dotnet test                                                   # everything; Dock
 dotnet test --filter "FullyQualifiedName!~Integration&FullyQualifiedName!~AuditApiTests"   # no Docker needed
 ```
 
-- `Unit`: envelope normalisation against real producer fixtures (`tests/.../Fixtures`), hash chain with fixed vectors, consumer settings and mapping, role claims, report maths, the Colombo sale date and the projection rules.
+- `Unit`: envelope normalisation against real producer fixtures (`tests/.../Fixtures`), hash chain with fixed vectors, consumer settings and mapping, role claims, report maths, the Colombo sale date, the projection rules, and export validation, status rules, CSV and PDF writers.
 - `Integration`: Testcontainers PostgreSQL 16 with the real roles script and migrations (the runtime role cannot UPDATE/DELETE/TRUNCATE, tamper detection, idempotent and concurrent appends, scoping, reporting figures, projections in the append transaction and rebuild) and Testcontainers Kafka (all five topics, dead-letter, replay after a failure without duplicates, a missing topic).
-- `Api`: the real host's routes are read only; 401, 403, 400, 404, 405 and 503 behaviour; Area Manager scoping against PostgreSQL, for the audit and report routes.
+- `Api`: the real host's routes are read only (the only POSTs are the rebuild and the export submission); 401, 403, 400, 404, 405, 409, 410 and 503 behaviour; Area Manager scoping against PostgreSQL, for the audit, report and export routes.
 
 ## Load test data (US-E7-1-Q7)
 
