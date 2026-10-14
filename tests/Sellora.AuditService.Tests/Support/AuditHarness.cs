@@ -1,0 +1,43 @@
+using Sellora.AuditService.Application.Ingestion;
+using Sellora.AuditService.Infrastructure.Audit;
+using Sellora.AuditService.Infrastructure.Ingestion;
+using Sellora.AuditService.Infrastructure.Persistence;
+
+namespace Sellora.AuditService.Tests.Support;
+
+/// <summary>The real services wired over one runtime-role context, as one Kafka message or request sees them.</summary>
+public sealed class AuditHarness : IAsyncDisposable
+{
+    public AuditHarness(PostgreSqlFixture fixture, Guid? tenantCompanyId = null)
+    {
+        Tenant = new TenantStub(tenantCompanyId);
+        Db = fixture.CreateAppContext(Tenant);
+        Store = new AuditStore(Db, Tenant, TimeProvider.System);
+        Processor = new AuditMessageProcessor(Store);
+        Verification = new ChainVerificationService(Db);
+    }
+
+    public TenantStub Tenant { get; }
+
+    public AuditDbContext Db { get; }
+
+    public AuditStore Store { get; }
+
+    public AuditMessageProcessor Processor { get; }
+
+    public ChainVerificationService Verification { get; }
+
+    public async Task<ProcessingOutcome> IngestAsync(IncomingMessage message) =>
+        await Processor.ProcessAsync(message, CancellationToken.None);
+
+    public async Task IngestAllAsync(IEnumerable<IncomingMessage> messages)
+    {
+        foreach (var message in messages)
+        {
+            var outcome = await IngestAsync(message);
+            Assert.NotEqual(ProcessingStatus.Rejected, outcome.Status);
+        }
+    }
+
+    public ValueTask DisposeAsync() => Db.DisposeAsync();
+}
