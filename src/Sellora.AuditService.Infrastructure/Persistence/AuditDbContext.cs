@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Sellora.AuditService.Domain.Audit;
+using Sellora.AuditService.Domain.Reporting;
 using Sellora.AuditService.Domain.Tenancy;
 
 namespace Sellora.AuditService.Infrastructure.Persistence;
@@ -19,6 +20,16 @@ public class AuditDbContext : DbContext
 
     /// <summary>Internal: the audit log is only written through IAuditStore.AppendAsync.</summary>
     internal DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+
+    public DbSet<OrderFact> OrderFacts => Set<OrderFact>();
+
+    public DbSet<OrderFactLine> OrderFactLines => Set<OrderFactLine>();
+
+    public DbSet<RepDimension> RepDimensions => Set<RepDimension>();
+
+    public DbSet<TerritoryDimension> TerritoryDimensions => Set<TerritoryDimension>();
+
+    public DbSet<AgencyDimension> AgencyDimensions => Set<AgencyDimension>();
 
     /// <summary>
     /// US-E7-1-BE6, the service layer of the three immutability layers: an
@@ -46,6 +57,16 @@ public class AuditDbContext : DbContext
         // Company boundary: no tenant means no rows.
         modelBuilder.Entity<AuditEntry>().HasQueryFilter(entry =>
             _tenantContext.CompanyId != null && entry.CompanyId == _tenantContext.CompanyId);
+        modelBuilder.Entity<OrderFact>().HasQueryFilter(fact =>
+            _tenantContext.CompanyId != null && fact.CompanyId == _tenantContext.CompanyId);
+        modelBuilder.Entity<OrderFactLine>().HasQueryFilter(line =>
+            _tenantContext.CompanyId != null && line.CompanyId == _tenantContext.CompanyId);
+        modelBuilder.Entity<RepDimension>().HasQueryFilter(rep =>
+            _tenantContext.CompanyId != null && rep.CompanyId == _tenantContext.CompanyId);
+        modelBuilder.Entity<TerritoryDimension>().HasQueryFilter(territory =>
+            _tenantContext.CompanyId != null && territory.CompanyId == _tenantContext.CompanyId);
+        modelBuilder.Entity<AgencyDimension>().HasQueryFilter(agency =>
+            _tenantContext.CompanyId != null && agency.CompanyId == _tenantContext.CompanyId);
     }
 
     private void RejectAuditChanges()
