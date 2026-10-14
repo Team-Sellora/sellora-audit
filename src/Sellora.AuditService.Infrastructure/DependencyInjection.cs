@@ -3,11 +3,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Sellora.AuditService.Application.Audit;
 using Sellora.AuditService.Application.Ingestion;
+using Sellora.AuditService.Application.Reporting;
 using Sellora.AuditService.Infrastructure.Audit;
 using Sellora.AuditService.Infrastructure.Dependencies;
 using Sellora.AuditService.Infrastructure.Ingestion;
 using Sellora.AuditService.Infrastructure.Kafka;
 using Sellora.AuditService.Infrastructure.Persistence;
+using Sellora.AuditService.Infrastructure.Reporting;
 
 namespace Sellora.AuditService.Infrastructure;
 
@@ -16,7 +18,8 @@ public static class DependencyInjection
     /// <summary>
     /// Everything the audit service needs except the HTTP identity pieces.
     /// The runtime connection string is the audit_app role's; it can read
-    /// and append, never migrate, update or delete audit entries.
+    /// and append, never migrate, update or delete audit entries. It has
+    /// full DML on the reporting schema only.
     /// </summary>
     public static IServiceCollection AddAuditInfrastructure(
         this IServiceCollection services,
@@ -39,11 +42,19 @@ public static class DependencyInjection
 
         services.Configure<AuditKafkaOptions>(configuration.GetSection(AuditKafkaOptions.SectionName));
 
+        services.Configure<ReportingOptions>(configuration.GetSection(ReportingOptions.SectionName));
+
+        services.AddScoped<IReportingProjector, ReportingProjector>();
         services.AddScoped<IAuditStore, AuditStore>();
         services.AddScoped<IAuditMessageProcessor, AuditMessageProcessor>();
 
         services.AddScoped<IAuditReadService, AuditReadService>();
         services.AddScoped<IChainVerificationService, ChainVerificationService>();
+
+        services.AddSingleton<ReportCache>();
+        services.AddScoped<ReportQueryService>();
+        services.AddScoped<IReportQueryService, CachedReportQueryService>();
+        services.AddScoped<IProjectionRebuildService, ProjectionRebuildService>();
 
         if (runBackgroundServices)
         {

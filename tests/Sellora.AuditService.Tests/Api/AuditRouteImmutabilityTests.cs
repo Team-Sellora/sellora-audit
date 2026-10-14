@@ -43,6 +43,21 @@ public sealed class AuditRouteImmutabilityTests : IClassFixture<AuditApiFactory>
     }
 
     [Fact]
+    public void The_only_non_get_route_is_the_projection_rebuild()
+    {
+        // US-E7-2-BE6 rebuilds reporting projections; nothing may write through any other route.
+        var offenders = Routes()
+            .Where(route => route.Verbs.Any(verb => verb is not ("GET" or "HEAD")))
+            .Where(route => !(route.Template.StartsWith("api/reports/projections/", StringComparison.OrdinalIgnoreCase) &&
+                              route.Verbs.SequenceEqual(new[] { "POST" })))
+            .Select(route => $"{route.Name}: {string.Join(',', route.Verbs)} {route.Template}")
+            .ToList();
+
+        Assert.Empty(offenders);
+        Assert.Contains(Routes(), route => route.Template == "api/reports/projections/rebuild" && route.Verbs.SequenceEqual(new[] { "POST" }));
+    }
+
+    [Fact]
     public void No_endpoint_maps_put_patch_or_delete_anywhere()
     {
         // An endpoint without verb metadata would answer PUT, PATCH and DELETE too.

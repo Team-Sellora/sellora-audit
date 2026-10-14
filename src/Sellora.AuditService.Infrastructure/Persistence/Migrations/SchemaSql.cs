@@ -50,4 +50,89 @@ public static class SchemaSql
     public const string InitialAuditSchemaDown = """
         DROP TABLE IF EXISTS audit.audit_entry;
         """;
+
+    public const string ReportingProjectionsUp = """
+        CREATE SCHEMA IF NOT EXISTS reporting;
+
+        CREATE TABLE reporting.order_fact (
+            company_id      uuid          NOT NULL,
+            order_id        uuid          NOT NULL,
+            order_reference text          NOT NULL,
+            province_id     uuid          NULL,
+            agency_id       uuid          NULL,
+            agency_name     text          NULL,
+            territory_id    uuid          NULL,
+            sales_rep_id    uuid          NULL,
+            sales_rep_name  text          NULL,
+            shop_id         uuid          NULL,
+            shop_name       text          NULL,
+            fulfilment_type text          NULL,
+            status          text          NOT NULL,
+            total           numeric(18,2) NOT NULL,
+            currency        text          NOT NULL,
+            placed_at       timestamptz   NULL,
+            placed_date     date          NULL,
+            confirmed_at    timestamptz   NULL,
+            sale_date       date          NULL,
+            cancelled_at    timestamptz   NULL,
+            paid_at         timestamptz   NULL,
+            paid_amount     numeric(18,2) NOT NULL,
+            updated_at      timestamptz   NOT NULL,
+            CONSTRAINT pk_order_fact PRIMARY KEY (company_id, order_id)
+        );
+
+        CREATE INDEX ix_order_fact_sale_date ON reporting.order_fact (company_id, status, sale_date);
+        CREATE INDEX ix_order_fact_placed_date ON reporting.order_fact (company_id, placed_date);
+        CREATE INDEX ix_order_fact_province_sale_date ON reporting.order_fact (company_id, province_id, sale_date);
+
+        CREATE TABLE reporting.order_fact_line (
+            company_id   uuid          NOT NULL,
+            order_id     uuid          NOT NULL,
+            line_number  integer       NOT NULL,
+            product_id   uuid          NOT NULL,
+            product_name text          NULL,
+            quantity     integer       NOT NULL,
+            line_total   numeric(18,2) NOT NULL,
+            CONSTRAINT pk_order_fact_line PRIMARY KEY (company_id, order_id, line_number),
+            CONSTRAINT fk_order_fact_line_order_fact FOREIGN KEY (company_id, order_id)
+                REFERENCES reporting.order_fact (company_id, order_id) ON DELETE CASCADE
+        );
+
+        CREATE INDEX ix_order_fact_line_product ON reporting.order_fact_line (company_id, product_id);
+
+        CREATE TABLE reporting.rep_dimension (
+            company_id   uuid NOT NULL,
+            sales_rep_id uuid NOT NULL,
+            name         text NULL,
+            territory_id uuid NULL,
+            agency_id    uuid NULL,
+            province_id  uuid NULL,
+            CONSTRAINT pk_rep_dimension PRIMARY KEY (company_id, sales_rep_id)
+        );
+
+        CREATE TABLE reporting.territory_dimension (
+            company_id   uuid NOT NULL,
+            territory_id uuid NOT NULL,
+            name         text NULL,
+            agency_id    uuid NULL,
+            province_id  uuid NULL,
+            CONSTRAINT pk_territory_dimension PRIMARY KEY (company_id, territory_id)
+        );
+
+        CREATE TABLE reporting.agency_dimension (
+            company_id  uuid NOT NULL,
+            agency_id   uuid NOT NULL,
+            name        text NULL,
+            province_id uuid NULL,
+            CONSTRAINT pk_agency_dimension PRIMARY KEY (company_id, agency_id)
+        );
+        """;
+
+    public const string ReportingProjectionsDown = """
+        DROP TABLE IF EXISTS reporting.order_fact_line;
+        DROP TABLE IF EXISTS reporting.order_fact;
+        DROP TABLE IF EXISTS reporting.rep_dimension;
+        DROP TABLE IF EXISTS reporting.territory_dimension;
+        DROP TABLE IF EXISTS reporting.agency_dimension;
+        """;
 }

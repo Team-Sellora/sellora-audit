@@ -1,10 +1,13 @@
 using System.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Sellora.AuditService.Application.Ingestion;
+using Sellora.AuditService.Application.Reporting;
 using Sellora.AuditService.Domain.Audit;
 using Sellora.AuditService.Domain.Tenancy;
 using Sellora.AuditService.Infrastructure.Persistence;
 using Sellora.AuditService.Infrastructure.Persistence.Configurations;
+using Sellora.AuditService.Infrastructure.Reporting;
 
 namespace Sellora.AuditService.Infrastructure.Ingestion;
 
@@ -12,9 +15,14 @@ namespace Sellora.AuditService.Infrastructure.Ingestion;
 /// US-E7-1-BE5: appends to a company's hash chain. In one transaction, in
 /// this order: take the company's advisory lock, check (company, event ID)
 /// for a duplicate, read the last hash and position, insert the new row,
-/// commit.
+/// update the reporting projections (US-E7-2-BE1), commit.
 /// </summary>
-public sealed class AuditStore(AuditDbContext db, ISystemTenantContext tenants, TimeProvider clock) : IAuditStore
+public sealed class AuditStore(
+    AuditDbContext db,
+    ISystemTenantContext tenants,
+    IReportingProjector projector,
+    TimeProvider clock,
+    ILogger<AuditStore> logger) : IAuditStore
 {
     public async Task<AppendOutcome> AppendAsync(AuditEventContent content, CancellationToken cancellationToken)
     {
@@ -24,7 +32,7 @@ public sealed class AuditStore(AuditDbContext db, ISystemTenantContext tenants, 
 
         try
         {
-            return await AppendOnceAsync(content, cancellationToken);
+            return await AppendOnceAsync(content, project: true, cancellationToken);
         }
         catch (Exception exception) when (AuditDatabase.IsUniqueViolation(exception, AuditEntryConfiguration.CompanyEventUniqueIndex))
         {
@@ -32,9 +40,23 @@ public sealed class AuditStore(AuditDbContext db, ISystemTenantContext tenants, 
             db.ChangeTracker.Clear();
             return new AppendOutcome(AppendStatus.Duplicate, null);
         }
+        catch (Exception exception) when (IsProjectionDataError(exception))
+        {
+            // A projection must never cost the audit log an event; a rebuild can catch the figures up.
+            logger.LogError(exception,
+                "ReportingProjectionSkipped: {EventType} {EventId} for company {CompanyId} could not be projected; recorded without projections",
+                content.EventType, content.EventId, content.CompanyId);
+
+            db.ChangeTracker.Clear();
+            return await AppendOnceAsync(content, project: false, cancellationToken);
+        }
     }
 
-    private async Task<AppendOutcome> AppendOnceAsync(AuditEventContent content, CancellationToken cancellationToken)
+    private static bool IsProjectionDataError(Exception exception) =>
+        ReportingProjector.IsDataError(exception) &&
+        !AuditDatabase.IsUniqueViolation(exception, AuditEntryConfiguration.CompanyPositionUniqueIndex);
+
+    private async Task<AppendOutcome> AppendOnceAsync(AuditEventContent content, bool project, CancellationToken cancellationToken)
     {
         // READ COMMITTED on purpose: each statement after the lock sees the
         // previous lock holder's committed row. REPEATABLE READ would read a
@@ -75,6 +97,11 @@ public sealed class AuditStore(AuditDbContext db, ISystemTenantContext tenants, 
 
         try
         {
+            if (project)
+            {
+                await projector.ProjectAsync(content, cancellationToken);
+            }
+
             await db.SaveChangesAsync(cancellationToken);
             await transaction.CommitAsync(cancellationToken);
         }

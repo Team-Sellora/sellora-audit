@@ -5,9 +5,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using Sellora.AuditService.Application.Ingestion;
+using Sellora.AuditService.Application.Reporting;
+using Sellora.AuditService.Domain.Reporting;
 using Sellora.AuditService.Domain.Tenancy;
 using Sellora.AuditService.Infrastructure.Ingestion;
 using Sellora.AuditService.Infrastructure.Kafka;
+using Sellora.AuditService.Infrastructure.Reporting;
 using Sellora.AuditService.Tests.Support;
 using Xunit.Abstractions;
 
@@ -29,6 +32,11 @@ public sealed class KafkaConsumerTests(PostgreSqlFixture fixture, KafkaFixture k
     public async Task Records_from_all_five_topics_are_stored_and_poison_is_dead_lettered()
     {
         await fixture.ExecuteAsOwnerAsync($"DELETE FROM audit.audit_entry WHERE company_id = '{FixtureCompany}'");
+        await fixture.ExecuteAsOwnerAsync(
+            $"DELETE FROM reporting.order_fact WHERE company_id = '{FixtureCompany}'; " +
+            $"DELETE FROM reporting.agency_dimension WHERE company_id = '{FixtureCompany}'; " +
+            $"DELETE FROM reporting.rep_dimension WHERE company_id = '{FixtureCompany}'; " +
+            $"DELETE FROM reporting.territory_dimension WHERE company_id = '{FixtureCompany}'");
         var options = Options(deadLetterTopic: $"sellora.audit.dead-letter.test.{Guid.NewGuid():N}");
         using var producer = Producer();
 
@@ -55,6 +63,14 @@ public sealed class KafkaConsumerTests(PostgreSqlFixture fixture, KafkaFixture k
         Assert.Equal(expected, await harness.Db.AuditEntries.CountAsync());
         Assert.Equal(5, await harness.Db.AuditEntries.Select(entry => entry.SourceTopic).Distinct().CountAsync());
         Assert.True((await harness.Verification.VerifyAsync(FixtureCompany, CancellationToken.None)).Verified);
+
+        // US-E7-2-BE1: the same consumer fills the projections.
+        var fixtureOrder = await harness.Db.OrderFacts.SingleAsync(fact => fact.OrderReference == "ORD-260924-K7P2QM");
+        Assert.Equal(OrderFactStatus.Cancelled, fixtureOrder.Status);
+        Assert.Equal(1255.00m, fixtureOrder.PaidAmount);
+        Assert.Equal(2, await harness.Db.OrderFacts.CountAsync());
+        Assert.Equal("Colombo Distribution Agency", (await harness.Db.AgencyDimensions.SingleAsync(agency => agency.AgencyId == Guid.Parse("41000000-0000-0000-0000-000000000001"))).Name);
+        Assert.Equal("Nimal Perera", (await harness.Db.RepDimensions.SingleAsync(rep => rep.SalesRepId == Guid.Parse("43000000-0000-0000-0000-000000000001"))).Name);
 
         var deadLetter = ReadOne(options.Value.DeadLetterTopic);
         Assert.Equal("not-json", Encoding.UTF8.GetString(deadLetter.Message.Value!));
@@ -225,6 +241,7 @@ public sealed class KafkaConsumerTests(PostgreSqlFixture fixture, KafkaFixture k
         services.AddScoped<ITenantContext>(provider => provider.GetRequiredService<TenantStub>());
         services.AddScoped<ISystemTenantContext>(provider => provider.GetRequiredService<TenantStub>());
         services.AddScoped(provider => fixture.CreateAppContext(provider.GetRequiredService<TenantStub>()));
+        services.AddScoped<IReportingProjector, ReportingProjector>();
         services.AddScoped<IAuditStore, AuditStore>();
         services.AddScoped<AuditMessageProcessor>();
 

@@ -148,6 +148,256 @@ namespace Sellora.AuditService.Infrastructure.Persistence.Migrations
 
                     b.ToTable("audit_entry", "audit");
                 });
+
+            modelBuilder.Entity("Sellora.AuditService.Domain.Reporting.AgencyDimension", b =>
+                {
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<Guid>("AgencyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("agency_id");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("ProvinceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("province_id");
+
+                    b.HasKey("CompanyId", "AgencyId")
+                        .HasName("pk_agency_dimension");
+
+                    b.ToTable("agency_dimension", "reporting");
+                });
+
+            modelBuilder.Entity("Sellora.AuditService.Domain.Reporting.OrderFact", b =>
+                {
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<Guid?>("AgencyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("agency_id");
+
+                    b.Property<string>("AgencyName")
+                        .HasColumnType("text")
+                        .HasColumnName("agency_name");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("cancelled_at");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("confirmed_at");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("currency");
+
+                    b.Property<string>("FulfilmentType")
+                        .HasColumnType("text")
+                        .HasColumnName("fulfilment_type");
+
+                    b.Property<string>("OrderReference")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("order_reference");
+
+                    b.Property<decimal>("PaidAmount")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("paid_amount");
+
+                    b.Property<DateTimeOffset?>("PaidAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("paid_at");
+
+                    b.Property<DateTimeOffset?>("PlacedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("placed_at");
+
+                    b.Property<DateOnly?>("PlacedDate")
+                        .HasColumnType("date")
+                        .HasColumnName("placed_date");
+
+                    b.Property<Guid?>("ProvinceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("province_id");
+
+                    b.Property<DateOnly?>("SaleDate")
+                        .HasColumnType("date")
+                        .HasColumnName("sale_date");
+
+                    b.Property<Guid?>("SalesRepId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sales_rep_id");
+
+                    b.Property<string>("SalesRepName")
+                        .HasColumnType("text")
+                        .HasColumnName("sales_rep_name");
+
+                    b.Property<Guid?>("ShopId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("shop_id");
+
+                    b.Property<string>("ShopName")
+                        .HasColumnType("text")
+                        .HasColumnName("shop_name");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<Guid?>("TerritoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("territory_id");
+
+                    b.Property<decimal>("Total")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("CompanyId", "OrderId")
+                        .HasName("pk_order_fact");
+
+                    b.HasIndex("CompanyId", "PlacedDate")
+                        .HasDatabaseName("ix_order_fact_placed_date");
+
+                    b.HasIndex("CompanyId", "ProvinceId", "SaleDate")
+                        .HasDatabaseName("ix_order_fact_province_sale_date");
+
+                    b.HasIndex("CompanyId", "Status", "SaleDate")
+                        .HasDatabaseName("ix_order_fact_sale_date");
+
+                    b.ToTable("order_fact", "reporting");
+                });
+
+            modelBuilder.Entity("Sellora.AuditService.Domain.Reporting.OrderFactLine", b =>
+                {
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<Guid>("OrderId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("order_id");
+
+                    b.Property<int>("LineNumber")
+                        .HasColumnType("integer")
+                        .HasColumnName("line_number");
+
+                    b.Property<decimal>("LineTotal")
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("line_total");
+
+                    b.Property<Guid>("ProductId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("product_id");
+
+                    b.Property<string>("ProductName")
+                        .HasColumnType("text")
+                        .HasColumnName("product_name");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
+
+                    b.HasKey("CompanyId", "OrderId", "LineNumber")
+                        .HasName("pk_order_fact_line");
+
+                    b.HasIndex("CompanyId", "ProductId")
+                        .HasDatabaseName("ix_order_fact_line_product");
+
+                    b.ToTable("order_fact_line", "reporting");
+                });
+
+            modelBuilder.Entity("Sellora.AuditService.Domain.Reporting.RepDimension", b =>
+                {
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<Guid>("SalesRepId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("sales_rep_id");
+
+                    b.Property<Guid?>("AgencyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("agency_id");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("ProvinceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("province_id");
+
+                    b.Property<Guid?>("TerritoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("territory_id");
+
+                    b.HasKey("CompanyId", "SalesRepId")
+                        .HasName("pk_rep_dimension");
+
+                    b.ToTable("rep_dimension", "reporting");
+                });
+
+            modelBuilder.Entity("Sellora.AuditService.Domain.Reporting.TerritoryDimension", b =>
+                {
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("company_id");
+
+                    b.Property<Guid>("TerritoryId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("territory_id");
+
+                    b.Property<Guid?>("AgencyId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("agency_id");
+
+                    b.Property<string>("Name")
+                        .HasColumnType("text")
+                        .HasColumnName("name");
+
+                    b.Property<Guid?>("ProvinceId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("province_id");
+
+                    b.HasKey("CompanyId", "TerritoryId")
+                        .HasName("pk_territory_dimension");
+
+                    b.ToTable("territory_dimension", "reporting");
+                });
+
+            modelBuilder.Entity("Sellora.AuditService.Domain.Reporting.OrderFactLine", b =>
+                {
+                    b.HasOne("Sellora.AuditService.Domain.Reporting.OrderFact", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("CompanyId", "OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_order_fact_line_order_fact");
+                });
+
+            modelBuilder.Entity("Sellora.AuditService.Domain.Reporting.OrderFact", b =>
+                {
+                    b.Navigation("Lines");
+                });
 #pragma warning restore 612, 618
         }
     }
