@@ -1,9 +1,13 @@
 # Sellora Audit Service
 
-Epic E7. This branch delivers US-E7-1 (CSP-250): every business event from the
-five Sellora topics is stored in an append-only, hash-chained audit log per
-company, which Company Admins and Area Managers can search and verify.
-Design and QA notes: [docs/US-E7-1.md](docs/US-E7-1.md).
+Epic E7: every business event from the five Sellora topics is stored in an
+append-only, hash-chained audit log per company, and sales dashboards are
+built from that log.
+
+| Story | What it delivers | Notes |
+|---|---|---|
+| US-E7-1 (CSP-250) | Immutable audit log: search, entry detail, chain verification | [docs/US-E7-1.md](docs/US-E7-1.md) |
+| US-E7-2 (CSP-252) | Reporting projections and sales dashboards (summary, breakdown, rebuild) | [docs/US-E7-2.md](docs/US-E7-2.md) |
 
 Same layout as sellora-order: `Domain` → `Application` → `Infrastructure` → `Api`, plus `tests`. .NET 8.
 
@@ -40,6 +44,9 @@ The container listens on 8080; `GET /health` returns `200 {"status":"Healthy"}` 
 | `GET /api/audit?orderReference&aggregateType&aggregateId&actorUserId&eventType&from&to&page&pageSize` | CompanyAdmin, AreaManager |
 | `GET /api/audit/{auditEntryId}` | CompanyAdmin, AreaManager |
 | `GET /api/audit/verify` | CompanyAdmin |
+| `GET /api/reports/sales-summary?from&to[&compareFrom&compareTo]` | CompanyAdmin, AreaManager |
+| `GET /api/reports/sales-breakdown?groupBy&from&to[&sort&direction]` | CompanyAdmin, AreaManager |
+| `POST /api/reports/projections/rebuild` | CompanyAdmin |
 
 The company always comes from the token. Area Managers see only their provinces (from Organization). Examples: `src/Sellora.AuditService.Api/Sellora.AuditService.Api.http`.
 
@@ -47,7 +54,7 @@ The company always comes from the token. Area Managers see only their provinces 
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `ConnectionStrings__Default` | `audit_app` on `localhost:5438`, no password | Runtime role: SELECT and INSERT on `audit.audit_entry` only |
+| `ConnectionStrings__Default` | `audit_app` on `localhost:5438`, no password | Runtime role: SELECT and INSERT on `audit.audit_entry`; full DML on the `reporting` schema |
 | `ConnectionStrings__Owner` | — | Migrations only (`scripts/run-migrations.sh`, `dotnet ef`) |
 | `Kafka__BootstrapServers` | `localhost:9092` | |
 | `Kafka__SaslUsername` / `Kafka__SaslPassword` | empty | Confluent Cloud API key and secret; SASL_SSL/PLAIN is used when a username is set |
@@ -56,8 +63,9 @@ The company always comes from the token. Area Managers see only their provinces 
 | `Kafka__DeadLetterTopic` | `sellora.audit.dead-letter.v1` | [contract](docs/contracts/audit-dead-letter.v1.md) |
 | `Kafka__AutoOffsetReset` | `Earliest` | First deploy back-fills what the topics still retain |
 | `Kafka__RetryDelaySeconds` | `5` | Wait before replaying after a failure |
-| `Dependencies__Organization__BaseUrl` | `http://localhost:8081` | Area Manager provinces (`GET /api/me/scope`) |
+| `Dependencies__Organization__BaseUrl` | `http://localhost:8081` | Area Manager provinces (`GET /api/me/scope`) and territory names (`GET /api/hierarchy`) |
 | `CallerScope__CacheSeconds` | `60` | Cache for an Area Manager's provinces |
+| `Reporting__CacheSeconds` | `60` | In-process cache for report responses (no Redis); `0` turns it off |
 | `Cors__AllowedOrigins` | `http://localhost:5173` | |
 | `Jwt__*` | WSO2 values, as in sellora-order | Raw claim names (`roles`, `companyId`, `sub`) |
 
@@ -68,9 +76,9 @@ dotnet test                                                   # everything; Dock
 dotnet test --filter "FullyQualifiedName!~Integration&FullyQualifiedName!~AuditApiTests"   # no Docker needed
 ```
 
-- `Unit`: envelope normalisation against real producer fixtures (`tests/.../Fixtures`), hash chain with fixed vectors, consumer settings and mapping, role claims.
-- `Integration`: Testcontainers PostgreSQL 16 with the real roles script and migrations (the runtime role cannot UPDATE/DELETE/TRUNCATE, tamper detection, idempotent and concurrent appends, scoping) and Testcontainers Kafka (all five topics, dead-letter, replay after a failure without duplicates, a missing topic).
-- `Api`: the real host's routes are read only; 401, 403, 400, 404, 405 and 503 behaviour; Area Manager scoping against PostgreSQL.
+- `Unit`: envelope normalisation against real producer fixtures (`tests/.../Fixtures`), hash chain with fixed vectors, consumer settings and mapping, role claims, report maths, the Colombo sale date and the projection rules.
+- `Integration`: Testcontainers PostgreSQL 16 with the real roles script and migrations (the runtime role cannot UPDATE/DELETE/TRUNCATE, tamper detection, idempotent and concurrent appends, scoping, reporting figures, projections in the append transaction and rebuild) and Testcontainers Kafka (all five topics, dead-letter, replay after a failure without duplicates, a missing topic).
+- `Api`: the real host's routes are read only; 401, 403, 400, 404, 405 and 503 behaviour; Area Manager scoping against PostgreSQL, for the audit and report routes.
 
 ## Load test data (US-E7-1-Q7)
 
