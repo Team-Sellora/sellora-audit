@@ -13,7 +13,7 @@ public sealed class EnvelopeNormaliserTests
 {
     private static readonly Guid Company = Guid.Parse("30000000-0000-0000-0000-000000000001");
 
-    public static IEnumerable<object[]> Fixtures() => ProducerFixtures.Names();
+    public static TheoryData<string> Fixtures() => ProducerFixtures.Names();
 
     [Theory]
     [MemberData(nameof(Fixtures))]

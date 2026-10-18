@@ -24,13 +24,13 @@ public static class JsonFields
             return true;
         }
 
-        foreach (var property in element.EnumerateObject())
+        if (element.EnumerateObject()
+                .Where(property => string.Equals(property.Name, name, StringComparison.OrdinalIgnoreCase))
+                .Select(property => (JsonElement?)property.Value)
+                .FirstOrDefault() is { } match)
         {
-            if (string.Equals(property.Name, name, StringComparison.OrdinalIgnoreCase))
-            {
-                value = property.Value;
-                return true;
-            }
+            value = match;
+            return true;
         }
 
         return false;

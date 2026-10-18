@@ -18,10 +18,15 @@ public static class AggregateRules
     public const string InventoryTopic = "sellora.inventory.v1";
     public const string DeliveryTopic = "sellora.delivery.v1";
 
-    private static readonly AggregateRule Order = new("Order", new[] { "orderId", "entityId" });
-    private static readonly AggregateRule VanReturn = new("VanReturn", new[] { "vanReturnId", "entityId" });
-    private static readonly AggregateRule Delivery = new("Delivery", new[] { "deliveryId", "deliveryJobId", "entityId" });
-    private static readonly AggregateRule Return = new("Return", new[] { "returnRequestId", "entityId" });
+    private const string EntityIdField = "entityId";
+    private const string AggregateIdField = "aggregateId";
+
+    private static readonly string[] FallbackIdFields = { EntityIdField, AggregateIdField };
+
+    private static readonly AggregateRule Order = new("Order", new[] { "orderId", EntityIdField });
+    private static readonly AggregateRule VanReturn = new("VanReturn", new[] { "vanReturnId", EntityIdField });
+    private static readonly AggregateRule Delivery = new("Delivery", new[] { "deliveryId", "deliveryJobId", EntityIdField });
+    private static readonly AggregateRule Return = new("Return", new[] { "returnRequestId", EntityIdField });
 
     private static readonly Dictionary<(string Topic, string EventType), AggregateRule> ByEvent = new()
     {
@@ -38,22 +43,22 @@ public static class AggregateRules
         [(DeliveryTopic, "ReturnRequested")] = Return,
         [(DeliveryTopic, "ReturnAccepted")] = Return,
         [(DeliveryTopic, "ReturnRejected")] = Return,
-        [(HierarchyTopic, "AgencyRegistered")] = new("Agency", new[] { "agencyId", "entityId" }),
-        [(HierarchyTopic, "TerritoryAssignedToAgency")] = new("Territory", new[] { "territoryId", "entityId" }),
-        [(HierarchyTopic, "ShopRegistered")] = new("Shop", new[] { "shopId", "entityId" }),
-        [(HierarchyTopic, "ShopUpdated")] = new("Shop", new[] { "shopId", "entityId" }),
-        [(HierarchyTopic, "SalesRepAssigned")] = new("SalesRep", new[] { "salesRepId", "entityId" }),
-        [(CatalogTopic, "PriceChanged")] = new("Product", new[] { "productId", "entityId" }),
-        [(InventoryTopic, "LowStockDetected")] = new("StockItem", new[] { "stockItemId", "entityId" })
+        [(HierarchyTopic, "AgencyRegistered")] = new("Agency", new[] { "agencyId", EntityIdField }),
+        [(HierarchyTopic, "TerritoryAssignedToAgency")] = new("Territory", new[] { "territoryId", EntityIdField }),
+        [(HierarchyTopic, "ShopRegistered")] = new("Shop", new[] { "shopId", EntityIdField }),
+        [(HierarchyTopic, "ShopUpdated")] = new("Shop", new[] { "shopId", EntityIdField }),
+        [(HierarchyTopic, "SalesRepAssigned")] = new("SalesRep", new[] { "salesRepId", EntityIdField }),
+        [(CatalogTopic, "PriceChanged")] = new("Product", new[] { "productId", EntityIdField }),
+        [(InventoryTopic, "LowStockDetected")] = new("StockItem", new[] { "stockItemId", EntityIdField })
     };
 
     private static readonly Dictionary<string, AggregateRule> ByTopic = new()
     {
-        [OrderTopic] = new("Order", new[] { "orderId", "entityId", "aggregateId" }),
-        [DeliveryTopic] = new("Delivery", new[] { "deliveryId", "deliveryJobId", "entityId", "aggregateId" }),
-        [HierarchyTopic] = new("Hierarchy", new[] { "entityId", "aggregateId" }),
-        [CatalogTopic] = new("Catalog", new[] { "productId", "entityId", "aggregateId" }),
-        [InventoryTopic] = new("Inventory", new[] { "stockItemId", "entityId", "aggregateId" })
+        [OrderTopic] = new("Order", new[] { "orderId", EntityIdField, AggregateIdField }),
+        [DeliveryTopic] = new("Delivery", new[] { "deliveryId", "deliveryJobId", EntityIdField, AggregateIdField }),
+        [HierarchyTopic] = new("Hierarchy", new[] { EntityIdField, AggregateIdField }),
+        [CatalogTopic] = new("Catalog", new[] { "productId", EntityIdField, AggregateIdField }),
+        [InventoryTopic] = new("Inventory", new[] { "stockItemId", EntityIdField, AggregateIdField })
     };
 
     public static readonly IReadOnlyList<string> SourceTopics = new[]
@@ -76,6 +81,6 @@ public static class AggregateRules
 
         return ByTopic.TryGetValue(topic, out var topicRule)
             ? topicRule
-            : new AggregateRule(topic, new[] { "entityId", "aggregateId" });
+            : new AggregateRule(topic, FallbackIdFields);
     }
 }

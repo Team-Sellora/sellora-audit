@@ -46,12 +46,9 @@ public sealed class ChainVerificationService(AuditDbContext db) : IChainVerifica
                 return VerifyChainResponse.From(verifier);
             }
 
-            foreach (var record in batch)
+            if (batch.Exists(record => !verifier.Check(record)))
             {
-                if (!verifier.Check(record))
-                {
-                    return VerifyChainResponse.From(verifier);
-                }
+                return VerifyChainResponse.From(verifier);
             }
 
             lastPosition = batch[^1].ChainPosition;

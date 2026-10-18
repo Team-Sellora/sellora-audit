@@ -31,6 +31,11 @@ public static class ProjectionEventReader
     public const string AgencyRegistered = "AgencyRegistered";
     public const string TerritoryAssignedToAgency = "TerritoryAssignedToAgency";
 
+    private const string ProvinceIdField = "provinceId";
+    private const string AgencyIdField = "agencyId";
+
+    private static readonly string[] OrderIdFields = { "orderId", "entityId" };
+
     public static OrderEventData? ReadOrderEvent(AuditEventContent content)
     {
         ArgumentNullException.ThrowIfNull(content);
@@ -43,7 +48,7 @@ public static class ProjectionEventReader
         using var document = JsonDocument.Parse(content.Payload);
         var root = document.RootElement;
 
-        if (JsonFields.FirstGuid(root, new[] { "orderId", "entityId" }) is not { } orderId)
+        if (JsonFields.FirstGuid(root, OrderIdFields) is not { } orderId)
         {
             return null;
         }
@@ -59,8 +64,8 @@ public static class ProjectionEventReader
             OrderId = orderId,
             OrderReference = JsonFields.String(root, "orderReference") ?? content.OrderReference,
             FulfilmentType = JsonFields.String(root, "fulfilmentType"),
-            ProvinceId = JsonFields.Guid(root, "provinceId") ?? content.ProvinceId,
-            AgencyId = agency is { } a ? JsonFields.Guid(a, "agencyId") : null,
+            ProvinceId = JsonFields.Guid(root, ProvinceIdField) ?? content.ProvinceId,
+            AgencyId = agency is { } a ? JsonFields.Guid(a, AgencyIdField) : null,
             AgencyName = agency is { } an ? JsonFields.String(an, "name") : null,
             TerritoryId = JsonFields.Guid(root, "territoryId"),
             SalesRepId = salesRep is { } r ? JsonFields.Guid(r, "salesRepId") : null,
@@ -128,13 +133,13 @@ public static class ProjectionEventReader
         {
             SalesRepAssigned when JsonFields.Guid(root, "salesRepId") is { } repId =>
                 new DimensionChange(DimensionKind.Rep, repId, JsonFields.String(root, "salesRepName"),
-                    JsonFields.Guid(root, "territoryId"), JsonFields.Guid(root, "agencyId"), JsonFields.Guid(root, "provinceId")),
-            AgencyRegistered when JsonFields.Guid(root, "agencyId") is { } agencyId =>
+                    JsonFields.Guid(root, "territoryId"), JsonFields.Guid(root, AgencyIdField), JsonFields.Guid(root, ProvinceIdField)),
+            AgencyRegistered when JsonFields.Guid(root, AgencyIdField) is { } agencyId =>
                 new DimensionChange(DimensionKind.Agency, agencyId, JsonFields.String(root, "agencyName"),
-                    null, null, JsonFields.Guid(root, "provinceId")),
+                    null, null, JsonFields.Guid(root, ProvinceIdField)),
             TerritoryAssignedToAgency when JsonFields.Guid(root, "territoryId") is { } territoryId =>
                 new DimensionChange(DimensionKind.Territory, territoryId, null,
-                    null, JsonFields.Guid(root, "agencyId"), JsonFields.Guid(root, "provinceId")),
+                    null, JsonFields.Guid(root, AgencyIdField), JsonFields.Guid(root, ProvinceIdField)),
             _ => null
         };
     }

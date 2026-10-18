@@ -17,7 +17,7 @@ env "ConnectionStrings__Owner=${OWNER_CONNECTION}" dotnet ef database update \
   --project src/Sellora.AuditService.Infrastructure/Sellora.AuditService.Infrastructure.csproj \
   --startup-project src/Sellora.AuditService.Api/Sellora.AuditService.Api.csproj
 
-if [ -n "${ADMIN_CONNECTION:-}" ]; then
+if [[ -n "${ADMIN_CONNECTION:-}" ]]; then
   psql "${ADMIN_CONNECTION}" -v ON_ERROR_STOP=1 \
     -v owner_password="${AUDIT_OWNER_PASSWORD:?}" \
     -v app_password="${AUDIT_APP_PASSWORD:?}" \

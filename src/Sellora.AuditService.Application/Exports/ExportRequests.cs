@@ -90,18 +90,18 @@ public static class ExportRequests
     {
         var builder = new StringBuilder();
 
-        foreach (var character in name ?? string.Empty)
+        foreach (var character in (name ?? string.Empty).Where(IsSafeFileNameCharacter))
         {
-            if (char.IsAsciiLetterOrDigit(character) || character is '-' or '_' or '.')
-            {
-                builder.Append(character);
-            }
+            builder.Append(character);
         }
 
         var safe = builder.ToString().TrimStart('.');
         safe = safe.Length > 100 ? safe[..100] : safe;
         return safe.Length == 0 ? "export" : safe;
     }
+
+    private static bool IsSafeFileNameCharacter(char character) =>
+        char.IsAsciiLetterOrDigit(character) || character is '-' or '_' or '.';
 
     // Keep only the filters the report type uses, with the on-screen defaults applied.
     private static ExportFilters Normalise(string reportType, ExportFilters filters) => reportType switch

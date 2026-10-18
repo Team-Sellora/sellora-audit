@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sellora.AuditService.Api.Authorization;
@@ -27,6 +28,8 @@ public sealed class AuditController(
     [Authorize(Policy = RolePolicies.RequireAuditReader)]
     [ProducesResponseType(typeof(PagedResponse<AuditEntrySummary>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    [SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+        Justification = "Each parameter is one documented query-string filter of the public search contract.")]
     public async Task<IActionResult> Search(
         [FromQuery] string? aggregateType,
         [FromQuery] Guid? aggregateId,

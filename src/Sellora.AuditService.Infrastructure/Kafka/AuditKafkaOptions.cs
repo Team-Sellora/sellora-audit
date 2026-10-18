@@ -25,7 +25,7 @@ public sealed class AuditKafkaOptions
     public string[] Topics { get; init; } = Array.Empty<string>();
 
     /// <summary>The configured topics, or <see cref="DefaultTopics"/> when none are configured.</summary>
-    public IReadOnlyList<string> SourceTopics =>
+    public IReadOnlyList<string> GetSourceTopics() =>
         Topics.Length == 0 ? DefaultTopics : Topics.Where(topic => !string.IsNullOrWhiteSpace(topic)).ToArray();
 
     public string DeadLetterTopic { get; init; } = "sellora.audit.dead-letter.v1";
@@ -50,7 +50,7 @@ public sealed class AuditKafkaOptions
 
     public void Validate()
     {
-        var topics = SourceTopics;
+        var topics = GetSourceTopics();
 
         if (string.IsNullOrWhiteSpace(BootstrapServers) ||
             string.IsNullOrWhiteSpace(ConsumerGroupId) ||

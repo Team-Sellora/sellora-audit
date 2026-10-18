@@ -66,6 +66,8 @@ public sealed class ForwardCorrelationIdHandler(ICorrelationIdAccessor correlati
 
 public static class DependencyRegistration
 {
+    private const char PathSeparator = '/';
+
     /// <summary>Nothing here contacts Organization, so the app starts healthy when it is unreachable.</summary>
     public static IServiceCollection AddAuditDependencies(this IServiceCollection services, IConfiguration configuration)
     {
@@ -108,6 +110,6 @@ public static class DependencyRegistration
                 $"Dependencies:{name}:BaseUrl must be an absolute URL (got '{endpoint.BaseUrl}').");
         }
 
-        return uri.AbsoluteUri.EndsWith('/') ? uri : new Uri(uri.AbsoluteUri + "/");
+        return uri.AbsoluteUri.EndsWith(PathSeparator) ? uri : new Uri(uri.AbsoluteUri + PathSeparator);
     }
 }

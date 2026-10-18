@@ -49,9 +49,10 @@ public sealed class AuditEventConsumerService(
 
             try
             {
-                consumer.Subscribe(settings.SourceTopics);
+                var sourceTopics = settings.GetSourceTopics();
+                consumer.Subscribe(sourceTopics);
                 logger.LogInformation("AuditConsumerStarted: group {GroupId} on {Topics}",
-                    settings.ConsumerGroupId, string.Join(", ", settings.SourceTopics));
+                    settings.ConsumerGroupId, string.Join(", ", sourceTopics));
 
                 while (!stoppingToken.IsCancellationRequested)
                 {
@@ -64,7 +65,7 @@ public sealed class AuditEventConsumerService(
                     catch (ConsumeException exception) when (IsMissingTopic(exception.Error))
                     {
                         // One source topic that does not exist yet must not stop the other four.
-                        logger.LogWarning("AuditTopicMissing: {Reason}. The other topics are still consumed.", exception.Error.Reason);
+                        logger.LogWarning(exception, "AuditTopicMissing: {Reason}. The other topics are still consumed.", exception.Error.Reason);
                         continue;
                     }
 

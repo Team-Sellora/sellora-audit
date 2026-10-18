@@ -66,39 +66,35 @@ public static class ExportTableBuilder
         entry.Payload
     };
 
-    public static string Scope(IReadOnlyCollection<Guid>? provinceIds) =>
-        provinceIds is null
-            ? "Company-wide"
-            : provinceIds.Count == 0
-                ? "No provinces"
-                : "Provinces: " + string.Join(", ", provinceIds.OrderBy(id => id).Select(id => id.ToString("D")));
+    public static string Scope(IReadOnlyCollection<Guid>? provinceIds) => provinceIds switch
+    {
+        null => "Company-wide",
+        { Count: 0 } => "No provinces",
+        _ => "Provinces: " + string.Join(", ", provinceIds.OrderBy(id => id).Select(id => id.ToString("D")))
+    };
 
     public static string Describe(ExportFilters filters)
     {
-        var parts = new List<string>();
-
-        void Add(string name, string? value)
-        {
-            if (!string.IsNullOrWhiteSpace(value))
+        var parts = new (string Name, string? Value)[]
             {
-                parts.Add($"{name}: {value}");
+                ("from", filters.From is { } from ? Date(from) : null),
+                ("to", filters.To is { } to ? Date(to) : null),
+                ("compareFrom", filters.CompareFrom is { } compareFrom ? Date(compareFrom) : null),
+                ("compareTo", filters.CompareTo is { } compareTo ? Date(compareTo) : null),
+                ("groupBy", filters.GroupBy),
+                ("sort", filters.Sort),
+                ("direction", filters.Direction),
+                ("aggregateType", filters.AggregateType),
+                ("aggregateId", filters.AggregateId?.ToString("D")),
+                ("orderReference", filters.OrderReference),
+                ("actorUserId", filters.ActorUserId),
+                ("eventType", filters.EventType),
+                ("occurredFrom", filters.OccurredFrom?.ToString("O", Invariant)),
+                ("occurredTo", filters.OccurredTo?.ToString("O", Invariant))
             }
-        }
-
-        Add("from", filters.From is { } from ? Date(from) : null);
-        Add("to", filters.To is { } to ? Date(to) : null);
-        Add("compareFrom", filters.CompareFrom is { } compareFrom ? Date(compareFrom) : null);
-        Add("compareTo", filters.CompareTo is { } compareTo ? Date(compareTo) : null);
-        Add("groupBy", filters.GroupBy);
-        Add("sort", filters.Sort);
-        Add("direction", filters.Direction);
-        Add("aggregateType", filters.AggregateType);
-        Add("aggregateId", filters.AggregateId?.ToString("D"));
-        Add("orderReference", filters.OrderReference);
-        Add("actorUserId", filters.ActorUserId);
-        Add("eventType", filters.EventType);
-        Add("occurredFrom", filters.OccurredFrom?.ToString("O", Invariant));
-        Add("occurredTo", filters.OccurredTo?.ToString("O", Invariant));
+            .Where(part => !string.IsNullOrWhiteSpace(part.Value))
+            .Select(part => $"{part.Name}: {part.Value}")
+            .ToList();
 
         return parts.Count == 0 ? "none" : string.Join("; ", parts);
     }
@@ -118,7 +114,7 @@ public static class ExportTableBuilder
         rows.Add(new ExportCell[] { "Change %", item, string.Empty, ExportCell.Percent(delta.Percent) });
     }
 
-    private static IReadOnlyList<ExportCell> Row(string section, string item, int? orders, decimal? value) => new[]
+    private static ExportCell[] Row(string section, string item, int? orders, decimal? value) => new[]
     {
         (ExportCell)section,
         item,

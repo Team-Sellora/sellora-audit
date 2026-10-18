@@ -59,7 +59,7 @@ public sealed class ExportRequestTests
     };
 
     [Theory]
-    [MemberData(nameof(InvalidFilters))]
+    [MemberData(nameof(InvalidFilters), DisableDiscoveryEnumeration = true)]
     public void Filters_are_validated_like_the_on_screen_endpoints(string type, ExportFilters filters)
     {
         var check = ExportRequests.Check("CompanyAdmin", new CreateExportRequest(type, "csv", filters));

@@ -25,7 +25,7 @@ public sealed class KafkaConsumerUnitTests
         Assert.Equal("sellora.audit.v1", options.ConsumerGroupId);
         Assert.Equal("sellora.audit.dead-letter.v1", options.DeadLetterTopic);
         Assert.Equal("Earliest", options.AutoOffsetReset);
-        Assert.Equal(AuditKafkaOptions.DefaultTopics, options.SourceTopics);
+        Assert.Equal(AuditKafkaOptions.DefaultTopics, options.GetSourceTopics());
     }
 
     [Fact]
@@ -38,7 +38,7 @@ public sealed class KafkaConsumerUnitTests
 
         options.Validate();
 
-        Assert.Equal(AuditKafkaOptions.DefaultTopics, options.SourceTopics);
+        Assert.Equal(AuditKafkaOptions.DefaultTopics, options.GetSourceTopics());
         Assert.Equal("sellora.audit.v1", options.ConsumerGroupId);
     }
 
@@ -51,7 +51,7 @@ public sealed class KafkaConsumerUnitTests
 
         var options = configuration.GetSection(AuditKafkaOptions.SectionName).Get<AuditKafkaOptions>()!;
 
-        Assert.Equal(new[] { "sellora.order.v1" }, options.SourceTopics);
+        Assert.Equal(new[] { "sellora.order.v1" }, options.GetSourceTopics());
     }
 
     [Fact]
