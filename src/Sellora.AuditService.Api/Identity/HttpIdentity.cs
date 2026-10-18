@@ -10,6 +10,8 @@ namespace Sellora.AuditService.Api.Identity;
 /// </summary>
 public sealed class HttpCurrentUserContext(IHttpContextAccessor accessor) : ICurrentUserContext
 {
+    private static readonly string[] NameClaimTypes = { "name", "preferred_username", "username", "email" };
+
     private System.Security.Claims.ClaimsPrincipal? User => accessor.HttpContext?.User;
 
     private CallerScope Scope =>
@@ -17,7 +19,7 @@ public sealed class HttpCurrentUserContext(IHttpContextAccessor accessor) : ICur
 
     public string? Subject => User?.FindFirst("sub")?.Value;
 
-    public string? Name => new[] { "name", "preferred_username", "username", "email" }
+    public string? Name => NameClaimTypes
         .Select(type => User?.FindFirst(type)?.Value)
         .FirstOrDefault(value => !string.IsNullOrWhiteSpace(value));
 

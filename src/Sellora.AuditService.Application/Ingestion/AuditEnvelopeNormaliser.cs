@@ -184,12 +184,11 @@ public static class AuditEnvelopeNormaliser
 
         // The rep places every order and takes cash at the counter.
         var cashSale = string.Equals(JsonFields.String(root, "fulfilmentType"), "ImmediateCashSale", StringComparison.Ordinal);
-        if (eventType == "OrderPlaced" || (cashSale && eventType is "OrderConfirmed" or "PaymentRecorded"))
+        if ((eventType == "OrderPlaced" || (cashSale && eventType is "OrderConfirmed" or "PaymentRecorded"))
+            && JsonFields.Object(root, "salesRep") is { } rep
+            && JsonFields.Guid(rep, "salesRepId") is { } repId)
         {
-            if (JsonFields.Object(root, "salesRep") is { } rep && JsonFields.Guid(rep, "salesRepId") is { } repId)
-            {
-                return (repId.ToString("D"), "SalesRep");
-            }
+            return (repId.ToString("D"), "SalesRep");
         }
 
         if (JsonFields.String(root, "changedBy") is { Length: > 0 } changedBy)

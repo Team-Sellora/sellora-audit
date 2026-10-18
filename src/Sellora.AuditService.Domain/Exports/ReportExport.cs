@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Sellora.AuditService.Domain.Tenancy;
 
 namespace Sellora.AuditService.Domain.Exports;
@@ -87,6 +88,8 @@ public sealed class ReportExport : ITenantScoped
 
     public string? Error { get; private set; }
 
+    [SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+        Justification = "Factory for the persisted export request; every parameter is a required column of the row.")]
     public static ReportExport Queue(
         Guid companyId,
         string requesterSub,

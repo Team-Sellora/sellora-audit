@@ -37,9 +37,9 @@ public static class ProducerFixtures
 
     public static ProducerFixture Get(string name) => All.Single(fixture => fixture.Name == name);
 
-    public static IEnumerable<object[]> Names() => All.Select(fixture => new object[] { fixture.Name });
+    public static TheoryData<string> Names() => new(All.Select(fixture => fixture.Name));
 
-    private static IReadOnlyList<ProducerFixture> Load()
+    private static List<ProducerFixture> Load()
     {
         var root = Path.Combine(AppContext.BaseDirectory, "Fixtures");
 

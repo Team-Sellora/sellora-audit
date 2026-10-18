@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
@@ -18,6 +19,8 @@ public static class AuditHasher
 
     public const string TimestampFormat = "yyyy-MM-dd'T'HH:mm:ss.ffffff'Z'";
 
+    [SuppressMessage("Major Code Smell", "S107:Methods should not have too many parameters",
+        Justification = "The parameters are the hash input fields of US-E7-1-BE5, in their specified order.")]
     public static string Compute(
         long chainPosition,
         Guid companyId,
