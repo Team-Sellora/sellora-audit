@@ -1,3 +1,9 @@
+## Selenium UI tests (test branch)
+
+This branch adds a Selenium UI test suite for the Audit log, Reports and Exports pages, and a GitHub Actions pipeline that runs it.
+The suite found one product defect, DEF-01: a non-UUID Aggregate ID filter is silently ignored.
+See the testing report in [selenium-tests/README.md](selenium-tests/README.md).
+
 # Sellora Audit Service
 
 Epic E7: every business event from the five Sellora topics is stored in an
