@@ -1,0 +1,23 @@
+{
+  "producer": "sellora-inventory",
+  "source": "LowStockDetectionService (default JSON options), OutboxRelayService: no headers, no key (dev)",
+  "topic": "sellora.inventory.v1",
+  "partition": 0,
+  "offset": 9,
+  "timestamp": "2026-09-24T05:12:43.000+00:00",
+  "key": null,
+  "headers": [],
+  "value": "{\"EventId\":\"71000000-0000-0000-0000-000000000001\",\"EventType\":\"LowStockDetected\",\"SchemaVersion\":\"1.0\",\"CompanyId\":\"30000000-0000-0000-0000-000000000001\",\"StockItemId\":\"72000000-0000-0000-0000-000000000001\",\"InventoryOwnerId\":\"73000000-0000-0000-0000-000000000001\",\"ProductId\":\"45000000-0000-0000-0000-000000000001\",\"BatchId\":null,\"AvailableQuantity\":4,\"ReorderThreshold\":10,\"DetectedAt\":\"2026-09-24T05:12:41.9876543+00:00\",\"OwnerType\":\"Agency\",\"ExternalOwnerId\":\"41000000-0000-0000-0000-000000000001\",\"OwnerDisplayName\":\"Colombo Distribution Agency\"}",
+  "expected": {
+    "eventId": "71000000-0000-0000-0000-000000000001",
+    "eventType": "LowStockDetected",
+    "aggregateType": "StockItem",
+    "aggregateId": "72000000-0000-0000-0000-000000000001",
+    "orderReference": null,
+    "provinceId": null,
+    "actorUserId": "unknown",
+    "actorRole": null,
+    "correlationId": null,
+    "occurredAt": "2026-09-24T05:12:41.987654Z"
+  }
+}

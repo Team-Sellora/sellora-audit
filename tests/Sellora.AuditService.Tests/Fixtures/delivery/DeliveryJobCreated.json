@@ -1,0 +1,40 @@
+{
+  "producer": "sellora-delivery",
+  "source": "DeliveryJobService.CreateFromOrderConfirmedAsync (cash sale), KafkaEventPublisher x- headers (dev)",
+  "topic": "sellora.delivery.v1",
+  "partition": 0,
+  "offset": 14,
+  "timestamp": "2026-09-24T05:12:46.000+00:00",
+  "key": "ORD-260924-K7P2QM",
+  "headers": [
+    {
+      "key": "x-event-type",
+      "text": "DeliveryJobCreated"
+    },
+    {
+      "key": "x-company-id",
+      "text": "30000000-0000-0000-0000-000000000001"
+    },
+    {
+      "key": "x-correlation-id",
+      "text": "83000000-0000-0000-0000-000000000002"
+    },
+    {
+      "key": "x-service-source",
+      "text": "sellora-delivery"
+    }
+  ],
+  "value": "{\"EventId\":\"82000000-0000-0000-0000-000000000002\",\"EventType\":\"DeliveryJobCreated\",\"CompanyId\":\"30000000-0000-0000-0000-000000000001\",\"DeliveryJobId\":\"84000000-0000-0000-0000-000000000001\",\"DeliveryReference\":\"DL-260924-Z9Y8X7\",\"OrderId\":\"8c1e3d52-6a1f-4b7e-9d2c-0f4e5a6b7c8d\",\"OrderReference\":\"ORD-260924-K7P2QM\",\"FulfilmentType\":\"ImmediateCashSale\",\"AgencyId\":\"41000000-0000-0000-0000-000000000001\",\"AgencyName\":\"Colombo Distribution Agency\",\"ShopId\":\"44000000-0000-0000-0000-000000000001\",\"ShopName\":\"Lake View Mini Mart\",\"Status\":\"Delivered\",\"Total\":1255.00,\"Currency\":\"LKR\",\"DeliveredAt\":\"2026-09-24T05:10:02.12+00:00\",\"CreatedAt\":\"2026-09-24T05:12:45.5+00:00\"}",
+  "expected": {
+    "eventId": "82000000-0000-0000-0000-000000000002",
+    "eventType": "DeliveryJobCreated",
+    "aggregateType": "Delivery",
+    "aggregateId": "84000000-0000-0000-0000-000000000001",
+    "orderReference": "ORD-260924-K7P2QM",
+    "provinceId": null,
+    "actorUserId": "unknown",
+    "actorRole": null,
+    "correlationId": "83000000-0000-0000-0000-000000000002",
+    "occurredAt": "2026-09-24T05:12:45.500000Z"
+  }
+}

@@ -1,0 +1,141 @@
+name: CD - Deploy Staging
+
+on:
+  push:
+    branches: [dev]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cd-staging-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  migrate-staging:
+    name: Apply staging database migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: staging
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9 # v4.3.1
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install PostgreSQL client
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install --yes postgresql-client
+
+      - name: Create database roles and schemas
+        shell: bash
+        env:
+          ADMIN_CONNECTION: ${{ secrets.ADMIN_CONNECTION }}
+          AUDIT_OWNER_PASSWORD: ${{ secrets.AUDIT_OWNER_PASSWORD }}
+          AUDIT_APP_PASSWORD: ${{ secrets.AUDIT_APP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          psql "$ADMIN_CONNECTION" -v ON_ERROR_STOP=1 \
+            -v owner_password="$AUDIT_OWNER_PASSWORD" \
+            -v app_password="$AUDIT_APP_PASSWORD" \
+            -f scripts/create-db-roles.sql
+
+      - name: Apply database migrations
+        shell: bash
+        env:
+          ConnectionStrings__Owner: ${{ secrets.ConnectionStrings__Owner }}
+        run: |
+          set -euo pipefail
+          ./scripts/run-migrations.sh
+
+      - name: Grant the application access to migrated tables
+        shell: bash
+        env:
+          ADMIN_CONNECTION: ${{ secrets.ADMIN_CONNECTION }}
+          AUDIT_OWNER_PASSWORD: ${{ secrets.AUDIT_OWNER_PASSWORD }}
+          AUDIT_APP_PASSWORD: ${{ secrets.AUDIT_APP_PASSWORD }}
+        run: |
+          set -euo pipefail
+          psql "$ADMIN_CONNECTION" -v ON_ERROR_STOP=1 \
+            -v owner_password="$AUDIT_OWNER_PASSWORD" \
+            -v app_password="$AUDIT_APP_PASSWORD" \
+            -f scripts/create-db-roles.sql
+
+  deploy-staging:
+    name: Deploy Audit to Azure staging
+    needs: migrate-staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: staging
+    steps:
+      - name: Validate staging configuration
+        shell: bash
+        env:
+          APP_NAME: ${{ vars.AZURE_STAGING_APP_NAME }}
+          BASE_URL: ${{ vars.STAGING_BASE_URL }}
+          DOCKERHUB_USERNAME: ${{ vars.DOCKERHUB_USERNAME }}
+        run: |
+          set -euo pipefail
+          if [ -z "$APP_NAME" ] || [ -z "$BASE_URL" ] || [ -z "$DOCKERHUB_USERNAME" ]; then
+            echo "Configure AZURE_STAGING_APP_NAME, STAGING_BASE_URL, and DOCKERHUB_USERNAME."
+            exit 1
+          fi
+          if [[ "$BASE_URL" != https://* ]]; then
+            echo "STAGING_BASE_URL must start with https://"
+            exit 1
+          fi
+
+      - name: Checkout repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push staging image
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
+        with:
+          context: .
+          file: ./Dockerfile
+          build-args: BUILD_COMMIT_SHA=${{ github.sha }}
+          push: true
+          tags: |
+            ${{ vars.DOCKERHUB_USERNAME }}/sellora-audit:dev-${{ github.sha }}
+            ${{ vars.DOCKERHUB_USERNAME }}/sellora-audit:staging
+
+      - name: Deploy staging image
+        uses: azure/webapps-deploy@5cfb776471c748b351e1ebf5770e208a54ace016 # v2.2.19
+        with:
+          app-name: ${{ vars.AZURE_STAGING_APP_NAME }}
+          slot-name: staging
+          publish-profile: ${{ secrets.AZURE_STAGING_PUBLISH_PROFILE }}
+          images: index.docker.io/${{ vars.DOCKERHUB_USERNAME }}/sellora-audit:dev-${{ github.sha }}
+
+      - name: Validate staging startup
+        shell: bash
+        env:
+          BASE_URL: ${{ vars.STAGING_BASE_URL }}
+        run: |
+          set -euo pipefail
+          for attempt in {1..20}; do
+            status=$(curl --silent --location --output /dev/null --write-out "%{http_code}" "${BASE_URL%/}/health" || true)
+            if [ "$status" = "200" ]; then
+              echo "Staging startup validation passed."
+              exit 0
+            fi
+            echo "Attempt $attempt: /health returned ${status:-no response}; retrying..."
+            sleep 15
+          done
+          echo "Staging deployment failed health validation."
+          exit 1

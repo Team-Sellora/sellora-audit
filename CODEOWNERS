@@ -1,0 +1,7 @@
+* @Team-Sellora/backend-team
+
+.github/ @Team-Sellora/devops-team @Team-Sellora/backend-team
+scripts/ @Team-Sellora/devops-team @Team-Sellora/backend-team
+docker-compose*.yml @Team-Sellora/devops-team
+Dockerfile @Team-Sellora/devops-team
+.dockerignore @Team-Sellora/devops-team
